@@ -231,6 +231,32 @@ def flatten_texts(question):
     return texts
 
 
+def load_existing_texts_from_db():
+    """DB에 이미 저장된 문항 텍스트 전체를 가져온다.
+    로컬 question_bank.json이 초기화되는 환경(GitHub Actions 등)에서도
+    과거 전체 기록과 비교해서 중복을 막기 위함."""
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        return []
+    try:
+        import psycopg2
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor()
+        cur.execute("SELECT prompt_text, options FROM questions;")
+        texts = []
+        for prompt_text, options in cur.fetchall():
+            if prompt_text:
+                texts.append(prompt_text)
+            for opt in options:
+                texts.append(opt["text"])
+        cur.close()
+        conn.close()
+        return texts
+    except Exception as e:
+        print(f"  (DB 기존 문항 조회 실패, 로컬 데이터만 사용: {e})", flush=True)
+        return []
+
+
 def generate(primary_key, count, format_type="mixed", max_attempts=5):
     traits, by_key = load_traits()
     if primary_key not in by_key:
@@ -243,6 +269,7 @@ def generate(primary_key, count, format_type="mixed", max_attempts=5):
     existing_texts = []
     for q in bank:
         existing_texts.extend(flatten_texts(q))
+    existing_texts.extend(load_existing_texts_from_db())
 
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 

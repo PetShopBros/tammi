@@ -1,0 +1,32 @@
+name: 매일 문항 자동 생성
+
+on:
+  schedule:
+    # 매일 UTC 18:00 = 한국시간(KST) 새벽 3:00
+    - cron: "0 18 * * *"
+  workflow_dispatch: {}   # 이 버튼을 누르면 수동으로도 즉시 실행 가능 (Actions 탭에서 Run workflow)
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/scripts
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 패키지 설치
+        run: pip install -r ../requirements.txt
+
+      - name: 특성별 문항 생성 + DB 로드
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python daily_batch.py --per-trait 3
+        

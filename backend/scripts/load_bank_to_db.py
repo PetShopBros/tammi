@@ -56,8 +56,13 @@ def load_to_db():
     inserted_questions = 0
     inserted_links = 0
     skipped = 0
+    already_loaded = 0
 
     for q in bank:
+        if q.get("loaded_to_db"):
+            already_loaded += 1
+            continue
+
         missing_traits = [
             link["trait_key"] for link in q.get("links", []) if link["trait_key"] not in trait_id_map
         ]
@@ -99,11 +104,21 @@ def load_to_db():
             )
             inserted_links += 1
 
+        # 다음 실행에서 이 문항을 다시 넣지 않도록 표시
+        q["loaded_to_db"] = True
+        q["db_question_id"] = question_id
+
     conn.commit()
     cur.close()
     conn.close()
 
-    print(f"완료: 문항 {inserted_questions}개, 연결 {inserted_links}개 삽입 (건너뜀 {skipped}개)")
+    # question_bank.json에 loaded_to_db 표시를 반영해서 다시 저장
+    BANK_PATH.write_text(json.dumps(bank, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print(
+        f"완료: 문항 {inserted_questions}개, 연결 {inserted_links}개 삽입 "
+        f"(건너뜀 {skipped}개, 이미 로드됨 {already_loaded}개)"
+    )
 
 
 if __name__ == "__main__":

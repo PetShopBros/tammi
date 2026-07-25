@@ -24,5 +24,9 @@
   {"key":"spending_style","family":"Lifestyle","type":"bipolar","name":"소비성향","pole_left":"planned","pole_right":"impulsive","pole_left_label":"계획소비","pole_right_label":"충동소비"},
 
   {"key":"learning_motivation","family":"Learning","type":"bipolar","name":"학업동기유형","pole_left":"intrinsic","pole_right":"extrinsic","pole_left_label":"내적동기","pole_right_label":"외적동기"},
-  {"key":"study_pattern","family":"Learning","type":"bipolar","name":"공부방식","pole_left":"cram","pole_right":"steady","pole_left_label":"몰아서","pole_right_label":"나눠서"}
+  {"key":"study_pattern","family":"Learning","type":"bipolar","name":"공부방식","pole_left":"cram","pole_right":"steady","pole_left_label":"몰아서","pole_right_label":"나눠서"},
+
+  {"key":"taste_flavor","family":"Taste","type":"bipolar","name":"맛 취향","pole_left":"mild","pole_right":"spicy","pole_left_label":"순한맛","pole_right_label":"매운맛"},
+  {"key":"taste_dining","family":"Taste","type":"bipolar","name":"식사 취향","pole_left":"solo","pole_right":"group","pole_left_label":"혼밥","pole_right_label":"함께"},
+  {"key":"taste_travel_env","family":"Taste","type":"bipolar","name":"여행 취향","pole_left":"nature","pole_right":"city","pole_left_label":"자연","pole_right_label":"도시"}
 ]
