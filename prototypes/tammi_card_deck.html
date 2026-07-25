@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>tammi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #eeeaf6;
+    --ink: #241c35;
+    --plum: #4b3869;
+    --mustard: #e2963c;
+    --coral: #e1566b;
+    --muted: #8b84a0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Noto Sans KR', sans-serif;
+    padding: 28px 16px 60px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{ width:100%; max-width: 420px; }
+
+  header{
+    text-align:center;
+    margin-bottom: 18px;
+  }
+  header h1{
+    font-family:'Space Grotesk','Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size: 26px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  header p{
+    margin:0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .counter{
+    text-align:center;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 12px;
+    color: var(--plum);
+    font-weight:500;
+    margin: 14px 0 20px;
+    letter-spacing: 0.04em;
+  }
+  .counter b{ font-size:15px; }
+
+  /* Duel card */
+  .duel{
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(36,28,53,0.25);
+  }
+  .opt{
+    padding: 38px 24px;
+    cursor:pointer;
+    user-select:none;
+    text-align:center;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .opt:active{ transform: scale(0.97); }
+  .opt.top{
+    background: var(--plum);
+    color: #f4f0ff;
+    border-radius: 20px 20px 0 0;
+  }
+  .opt.bottom{
+    background: var(--mustard);
+    color: #2b1c05;
+    border-radius: 0 0 20px 20px;
+  }
+  .opt .label{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin-bottom: 10px;
+  }
+  .opt .text{
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .vs-badge{
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    width: 46px; height:46px;
+    background: var(--coral);
+    color:#fff;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(225,86,107,0.5);
+    z-index: 5;
+    pointer-events:none;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .duel.flying-top .opt.top{ transform: translateY(-40px); opacity:0; }
+    .duel.flying-top .opt.bottom{ transform: translateY(-40px); opacity:0; }
+    .duel.flying-bottom .opt.top{ transform: translateY(40px); opacity:0; }
+    .duel.flying-bottom .opt.bottom{ transform: translateY(40px); opacity:0; }
+    .duel .opt{ transition: transform .22s ease, opacity .22s ease; }
+    .duel.enter .opt{ animation: popIn .25s ease; }
+    @keyframes popIn{ from{opacity:0; transform: scale(0.96);} to{opacity:1; transform:none;} }
+  }
+
+  .skip-row{
+    text-align:center;
+    margin-top: 14px;
+  }
+  .skip-row button{
+    background:none;
+    border:none;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-decoration: underline;
+    cursor:pointer;
+  }
+
+  /* Profile toggle + panel */
+  .profile-toggle{
+    display:block;
+    width:100%;
+    margin-top: 26px;
+    background: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size: 14px;
+    color: var(--plum);
+    cursor:pointer;
+    box-shadow: 0 4px 14px rgba(36,28,53,0.08);
+  }
+  .profile-panel{
+    display:none;
+    background:#fff;
+    border-radius: 14px;
+    margin-top: 10px;
+    padding: 20px 20px 6px;
+    box-shadow: 0 4px 14px rgba(36,28,53,0.08);
+  }
+  .profile-panel.open{ display:block; }
+  .profile-empty{
+    font-size: 13px;
+    color: var(--muted);
+    padding-bottom: 16px;
+    line-height:1.6;
+  }
+  .axis{
+    margin-bottom: 18px;
+  }
+  .axis .poles{
+    display:flex;
+    justify-content:space-between;
+    font-size: 12px;
+    font-weight:700;
+    margin-bottom: 6px;
+  }
+  .axis .poles span:first-child{ color: var(--plum); }
+  .axis .poles span:last-child{ color: var(--mustard); }
+  .axis .bar{
+    height: 8px;
+    border-radius: 4px;
+    background: #efe9dd;
+    overflow:hidden;
+    display:flex;
+  }
+  .axis .bar .fillL{ background: var(--plum); height:100%; }
+  .axis .bar .fillR{ background: var(--mustard); height:100%; }
+
+  .badge-line{
+    text-align:center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--coral);
+    padding: 4px 0 18px;
+  }
+
+  .compare-toggle{
+    display:block;
+    width:100%;
+    margin-top: 10px;
+    background: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size: 14px;
+    color: var(--coral);
+    cursor:pointer;
+    box-shadow: 0 4px 14px rgba(36,28,53,0.08);
+  }
+  .compare-panel{
+    display:none;
+    background:#fff;
+    border-radius: 14px;
+    margin-top: 10px;
+    padding: 18px 20px 20px;
+    box-shadow: 0 4px 14px rgba(36,28,53,0.08);
+  }
+  .compare-panel.open{ display:block; }
+  .compare-note{
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .compare-section{ margin-bottom: 20px; }
+  .compare-section h4{
+    font-size: 13px;
+    font-weight:700;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .code-row{ display:flex; gap:8px; }
+  .code-row input{
+    flex:1;
+    border: 1.5px solid #e7e2f2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family:'Space Grotesk', sans-serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .code-row button{
+    background: var(--plum);
+    color: #fff;
+    border:none;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-weight:700;
+    font-size: 13px;
+    cursor:pointer;
+    white-space: nowrap;
+  }
+  .my-code-box{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 8px;
+  }
+  .my-code-box span{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight:700;
+    letter-spacing: 0.1em;
+    color: var(--plum);
+  }
+  .my-code-box button{
+    background:none;
+    border: 1px solid var(--plum);
+    color: var(--plum);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor:pointer;
+  }
+  .compare-msg{
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .cmp-axis{ margin-bottom: 16px; }
+  .cmp-axis .cmp-poles{
+    display:flex; justify-content:space-between;
+    font-size: 11.5px; font-weight:700; margin-bottom:4px;
+  }
+  .cmp-axis .cmp-poles span:first-child{ color: var(--plum); }
+  .cmp-axis .cmp-poles span:last-child{ color: var(--mustard); }
+  .cmp-bar{
+    height:7px; border-radius:4px; background:#efe9dd;
+    overflow:hidden; display:flex; margin-bottom:3px;
+  }
+  .cmp-bar .fL{ background: var(--plum); height:100%; }
+  .cmp-bar .fR{ background: var(--mustard); height:100%; }
+  .cmp-bar.friend .fL{ background: #a99bd4; }
+  .cmp-bar.friend .fR{ background: #f0c184; }
+  .cmp-who{ font-size:10.5px; color: var(--muted); margin-bottom:2px; }
+  .cmp-result{
+    text-align:center;
+    font-size: 14px;
+    font-weight:700;
+    color: var(--coral);
+    padding-top: 6px;
+  }
+
+  .starmap-card{
+    background: #161029;
+    border-radius: 16px;
+    padding: 18px 10px 8px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .starmap-title{
+    text-align:center;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a89be0;
+    margin-bottom: 4px;
+  }
+  .starmap-empty{
+    text-align:center;
+    font-size: 12.5px;
+    color: #8078a8;
+    padding: 30px 10px 34px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>tammi</h1>
+    <p>매일 조금씩, 나를 탐구하다</p>
+  </header>
+
+  <div class="counter">총 <b id="totalCount">0</b>번 선택함</div>
+
+  <div class="duel enter" id="duel">
+    <div class="opt top" id="optTop">
+      <div class="label">A</div>
+      <div class="text" id="textTop">불러오는 중…</div>
+    </div>
+    <div class="opt bottom" id="optBottom">
+      <div class="label">B</div>
+      <div class="text" id="textBottom">불러오는 중…</div>
+    </div>
+    <div class="vs-badge">VS</div>
+  </div>
+
+  <div class="skip-row"><button id="skipBtn">패스하고 다음 카드</button></div>
+
+  <button class="profile-toggle" id="profileToggle">내 프로필 보기 ▾</button>
+  <div class="profile-panel" id="profilePanel">
+    <div id="profileEmpty" class="profile-empty">아직 데이터가 부족해요. 몇 번 더 선택해보세요.</div>
+    <div class="starmap-card">
+      <div class="starmap-title">내 성단</div>
+      <div id="starmapWrap"></div>
+    </div>
+    <div id="axesWrap"></div>
+    <div class="badge-line" id="badgeLine"></div>
+  </div>
+
+  <button class="compare-toggle" id="compareToggle">친구와 비교하기 ▾</button>
+  <div class="compare-panel" id="comparePanel">
+    <div class="compare-note">비교 코드는 이 앱을 쓰는 누구나 코드를 알면 볼 수 있어요. 믿을 수 있는 친구에게만 공유해주세요.</div>
+
+    <div class="compare-section">
+      <h4>내 코드 공유하기</h4>
+      <button class="compare-toggle" id="genCodeBtn" style="margin:0;color:var(--plum);">코드 만들기</button>
+      <div class="my-code-box" id="myCodeBox" style="display:none;">
+        <span id="myCodeText">----</span>
+        <button id="copyCodeBtn">복사</button>
+      </div>
+    </div>
+
+    <div class="compare-section">
+      <h4>친구 코드로 비교하기</h4>
+      <div class="code-row">
+        <input id="friendCodeInput" placeholder="친구 코드 입력" maxlength="6">
+        <button id="compareBtn">비교</button>
+      </div>
+      <div class="compare-msg" id="compareMsg"></div>
+    </div>
+
+    <div id="compareResult"></div>
+  </div>
+
+</div>
+
+<script>
+const PAIRS = [
+  {axis:'stability', top:{pole:'stable', text:'평생 한 동네에서 살기'}, bottom:{pole:'adventure', text:'매년 새로운 도시로 이사하기'}},
+  {axis:'stability', top:{pole:'stable', text:'안정적인 월급 받기'}, bottom:{pole:'adventure', text:'대박 아니면 쪽박, 창업하기'}},
+  {axis:'stability', top:{pole:'stable', text:'늘 가던 맛집 가기'}, bottom:{pole:'adventure', text:'처음 보는 음식 도전하기'}},
+  {axis:'stability', top:{pole:'stable', text:'짜여진 여행 일정'}, bottom:{pole:'adventure', text:'즉흥적으로 떠나는 여행'}},
+  {axis:'stability', top:{pole:'stable', text:'매일 같은 루틴'}, bottom:{pole:'adventure', text:'매일 다른 하루'}},
+  {axis:'stability', top:{pole:'stable', text:'안전한 선택'}, bottom:{pole:'adventure', text:'짜릿한 도전'}},
+  {axis:'stability', top:{pole:'stable', text:'예측 가능한 하루'}, bottom:{pole:'adventure', text:'무슨 일이 생길지 모르는 하루'}},
+
+  {axis:'mind', top:{pole:'logic', text:'데이터로 설득하기'}, bottom:{pole:'emotion', text:'마음으로 공감하기'}},
+  {axis:'mind', top:{pole:'logic', text:'논리적인 대화'}, bottom:{pole:'emotion', text:'감성적인 대화'}},
+  {axis:'mind', top:{pole:'logic', text:'머리로 결정하기'}, bottom:{pole:'emotion', text:'마음이 이끄는 대로'}},
+  {axis:'mind', top:{pole:'logic', text:'분석하며 보는 영화'}, bottom:{pole:'emotion', text:'펑펑 울게 되는 영화'}},
+  {axis:'mind', top:{pole:'logic', text:'효율을 중시함'}, bottom:{pole:'emotion', text:'분위기를 중시함'}},
+  {axis:'mind', top:{pole:'logic', text:'조목조목 설명하기'}, bottom:{pole:'emotion', text:'그냥 느끼는 대로 표현하기'}},
+  {axis:'mind', top:{pole:'logic', text:'팩트 위주로 말하기'}, bottom:{pole:'emotion', text:'뉘앙스 위주로 말하기'}},
+
+  {axis:'plan', top:{pole:'planner', text:'여행은 계획표부터 짜기'}, bottom:{pole:'spontaneous', text:'일단 떠나고 보기'}},
+  {axis:'plan', top:{pole:'planner', text:'할 일 목록 작성하기'}, bottom:{pole:'spontaneous', text:'생각나는 대로 행동하기'}},
+  {axis:'plan', top:{pole:'planner', text:'약속은 미리 정하기'}, bottom:{pole:'spontaneous', text:'즉흥 만남 좋아하기'}},
+  {axis:'plan', top:{pole:'planner', text:'예산 짜서 소비하기'}, bottom:{pole:'spontaneous', text:'끌리는 대로 소비하기'}},
+  {axis:'plan', top:{pole:'planner', text:'식단 미리 짜두기'}, bottom:{pole:'spontaneous', text:'그날 끌리는 거 먹기'}},
+  {axis:'plan', top:{pole:'planner', text:'정해진 루틴 지키기'}, bottom:{pole:'spontaneous', text:'그때그때 다르게 하기'}},
+  {axis:'plan', top:{pole:'planner', text:'미리 준비해두는 성격'}, bottom:{pole:'spontaneous', text:'닥치면 하는 성격'}},
+
+  {axis:'social', top:{pole:'relationship', text:'친구들과 왁자지껄'}, bottom:{pole:'independence', text:'혼자만의 시간'}},
+  {axis:'social', top:{pole:'relationship', text:'다같이 정하기'}, bottom:{pole:'independence', text:'혼자 정하기'}},
+  {axis:'social', top:{pole:'relationship', text:'무리 안에서 함께'}, bottom:{pole:'independence', text:'내 갈 길 가기'}},
+  {axis:'social', top:{pole:'relationship', text:'고민을 나누기'}, bottom:{pole:'independence', text:'혼자 해결하기'}},
+  {axis:'social', top:{pole:'relationship', text:'함께하는 취미'}, bottom:{pole:'independence', text:'혼자 하는 취미'}},
+  {axis:'social', top:{pole:'relationship', text:'다수 의견 따르기'}, bottom:{pole:'independence', text:'내 소신대로 하기'}},
+  {axis:'social', top:{pole:'relationship', text:'연락 자주 하는 편'}, bottom:{pole:'independence', text:'연락 뜸해도 괜찮은 편'}}
+];
+
+const AXES = [
+  {key:'stability', left:'stable', right:'adventure', leftLabel:'안정형', rightLabel:'모험형'},
+  {key:'mind', left:'logic', right:'emotion', leftLabel:'이성형', rightLabel:'감성형'},
+  {key:'plan', left:'planner', right:'spontaneous', leftLabel:'계획형', rightLabel:'즉흥형'},
+  {key:'social', left:'relationship', right:'independence', leftLabel:'관계형', rightLabel:'독립형'}
+];
+
+const STAR_POLES = [
+  {pole:'stable', opp:'adventure', label:'안정'},
+  {pole:'planner', opp:'spontaneous', label:'계획'},
+  {pole:'logic', opp:'emotion', label:'이성'},
+  {pole:'relationship', opp:'independence', label:'관계'},
+  {pole:'adventure', opp:'stable', label:'모험'},
+  {pole:'spontaneous', opp:'planner', label:'즉흥'},
+  {pole:'emotion', opp:'logic', label:'감성'},
+  {pole:'independence', opp:'relationship', label:'독립'}
+];
+const BG_STARS = [
+  [20,30,1.2,0.3],[60,15,0.8,0.4],[280,25,1,0.25],[300,60,0.7,0.3],
+  [15,150,0.9,0.35],[300,140,1.1,0.25],[30,290,0.8,0.3],[290,280,1,0.35],
+  [150,20,0.7,0.3],[150,300,0.9,0.25],[100,290,0.6,0.3],[220,300,0.8,0.25],
+  [10,220,0.7,0.3],[310,210,0.9,0.3],[60,270,0.6,0.25],[250,50,0.8,0.3]
+];
+
+function renderStarmap(){
+  const wrap = document.getElementById('starmapWrap');
+  if(tallies.total < 4){
+    wrap.innerHTML = '<div class="starmap-empty">몇 번 더 선택하면 나만의 별자리가 나타나요</div>';
+    return;
+  }
+  const cx=160, cy=160, minR=22, maxR=95, labelR=118;
+  const bgStars = BG_STARS.map(([x,y,r,o])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${o}"/>`).join('');
+  const guides = [minR, (minR+maxR)/2, maxR].map(r=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#3a3160" stroke-width="0.6"/>`).join('');
+
+  const pts = STAR_POLES.map((p,i)=>{
+    const sum = (tallies[p.pole]||0) + (tallies[p.opp]||0);
+    const pct = sum ? (tallies[p.pole]||0)/sum : 0.5;
+    const r = minR + pct*(maxR-minR);
+    const angle = (i*45 - 90) * Math.PI/180;
+    const x = cx + r*Math.cos(angle);
+    const y = cy + r*Math.sin(angle);
+    const lx = cx + labelR*Math.cos(angle);
+    const ly = cy + labelR*Math.sin(angle);
+    return {x,y,lx,ly,label:p.label};
+  });
+
+  const spokes = pts.map(p=>`<line x1="${cx}" y1="${cy}" x2="${p.lx*0.86+cx*0.14}" y2="${p.ly*0.86+cy*0.14}" stroke="#3a3160" stroke-width="0.5"/>`).join('');
+  const polygonPath = 'M' + pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L') + 'Z';
+  const stars = pts.map(p=>`
+    <circle cx="${p.x}" cy="${p.y}" r="7" fill="#e2b04a" opacity="0.22"/>
+    <circle cx="${p.x}" cy="${p.y}" r="3" fill="#f5d998"/>
+    <text x="${p.lx}" y="${p.ly}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#c9bdf0" font-family="'Noto Sans KR',sans-serif">${p.label}</text>
+  `).join('');
+
+  wrap.innerHTML = `
+    <svg width="100%" viewBox="0 0 320 320">
+      ${bgStars}
+      ${guides}
+      ${spokes}
+      <path d="${polygonPath}" fill="#e2b04a" fill-opacity="0.1" stroke="#e2b04a" stroke-width="1.2"/>
+      ${stars}
+    </svg>
+  `;
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+let deck = shuffle(PAIRS);
+let deckPtr = 0;
+let current = null;
+let tallies = {};
+AXES.forEach(a=>{ tallies[a.left]=0; tallies[a.right]=0; });
+tallies.total = 0;
+
+const textTop = document.getElementById('textTop');
+const textBottom = document.getElementById('textBottom');
+const optTop = document.getElementById('optTop');
+const optBottom = document.getElementById('optBottom');
+const duel = document.getElementById('duel');
+const totalCount = document.getElementById('totalCount');
+const skipBtn = document.getElementById('skipBtn');
+const profileToggle = document.getElementById('profileToggle');
+const profilePanel = document.getElementById('profilePanel');
+const profileEmpty = document.getElementById('profileEmpty');
+const axesWrap = document.getElementById('axesWrap');
+const badgeLine = document.getElementById('badgeLine');
+
+function nextCard(){
+  if(deckPtr >= deck.length){
+    deck = shuffle(PAIRS);
+    deckPtr = 0;
+  }
+  current = deck[deckPtr++];
+  textTop.textContent = current.top.text;
+  textBottom.textContent = current.bottom.text;
+}
+
+async function loadTallies(){
+  try{
+    const r = await window.storage.get('profile:tallies', false);
+    if(r && r.value){
+      const saved = JSON.parse(r.value);
+      tallies = Object.assign(tallies, saved);
+    }
+  }catch(e){ /* no saved data yet */ }
+  renderProfile();
+  nextCard();
+  duel.classList.remove('enter');
+  void duel.offsetWidth;
+  duel.classList.add('enter');
+}
+
+async function saveTallies(){
+  try{
+    await window.storage.set('profile:tallies', JSON.stringify(tallies), false);
+  }catch(e){ console.error('save failed', e); }
+}
+
+function renderProfile(){
+  totalCount.textContent = tallies.total;
+  renderStarmap();
+  if(tallies.total < 4){
+    profileEmpty.style.display = 'block';
+    axesWrap.innerHTML = '';
+    badgeLine.textContent = '';
+    return;
+  }
+  profileEmpty.style.display = 'none';
+  axesWrap.innerHTML = '';
+  const dominant = [];
+  AXES.forEach(a=>{
+    const l = tallies[a.left] || 0;
+    const r = tallies[a.right] || 0;
+    const sum = l + r;
+    const pctL = sum === 0 ? 50 : Math.round((l/sum)*100);
+    const pctR = 100 - pctL;
+    const div = document.createElement('div');
+    div.className = 'axis';
+    div.innerHTML = `
+      <div class="poles"><span>${a.leftLabel} ${sum? pctL+'%':''}</span><span>${a.rightLabel} ${sum? pctR+'%':''}</span></div>
+      <div class="bar"><div class="fillL" style="width:${pctL}%"></div><div class="fillR" style="width:${pctR}%"></div></div>
+    `;
+    axesWrap.appendChild(div);
+    if(sum>0){
+      dominant.push(pctL>=pctR ? a.leftLabel : a.rightLabel);
+    }
+  });
+  badgeLine.textContent = dominant.length ? dominant.join(' · ') : '';
+}
+
+function choose(pole, direction){
+  tallies[pole] = (tallies[pole]||0) + 1;
+  tallies.total += 1;
+  saveTallies();
+  renderProfile();
+
+  duel.classList.add(direction === 'top' ? 'flying-top' : 'flying-bottom');
+  setTimeout(()=>{
+    nextCard();
+    duel.classList.remove('flying-top','flying-bottom');
+    duel.classList.remove('enter');
+    void duel.offsetWidth;
+    duel.classList.add('enter');
+  }, 180);
+}
+
+optTop.addEventListener('click', ()=> choose(current.top.pole, 'top'));
+optBottom.addEventListener('click', ()=> choose(current.bottom.pole, 'bottom'));
+skipBtn.addEventListener('click', ()=>{
+  nextCard();
+  duel.classList.remove('enter');
+  void duel.offsetWidth;
+  duel.classList.add('enter');
+});
+
+profileToggle.addEventListener('click', ()=>{
+  const open = profilePanel.classList.toggle('open');
+  profileToggle.textContent = open ? '내 프로필 보기 ▴' : '내 프로필 보기 ▾';
+});
+
+// Compare with friend
+const compareToggle = document.getElementById('compareToggle');
+const comparePanel = document.getElementById('comparePanel');
+const genCodeBtn = document.getElementById('genCodeBtn');
+const myCodeBox = document.getElementById('myCodeBox');
+const myCodeText = document.getElementById('myCodeText');
+const copyCodeBtn = document.getElementById('copyCodeBtn');
+const friendCodeInput = document.getElementById('friendCodeInput');
+const compareBtn = document.getElementById('compareBtn');
+const compareMsg = document.getElementById('compareMsg');
+const compareResult = document.getElementById('compareResult');
+
+compareToggle.addEventListener('click', ()=>{
+  const open = comparePanel.classList.toggle('open');
+  compareToggle.textContent = open ? '친구와 비교하기 ▴' : '친구와 비교하기 ▾';
+});
+
+function genCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for(let i=0;i<4;i++) c += chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+genCodeBtn.addEventListener('click', async ()=>{
+  if(tallies.total < 4){
+    compareMsg.textContent = '카드를 몇 장 더 답한 뒤에 공유해보세요.';
+    return;
+  }
+  const code = genCode();
+  genCodeBtn.textContent = '만드는 중…';
+  try{
+    const res = await window.storage.set('compare:'+code, JSON.stringify({tallies, savedAt: Date.now()}), true);
+    if(res){
+      myCodeText.textContent = code;
+      myCodeBox.style.display = 'flex';
+      genCodeBtn.style.display = 'none';
+    } else {
+      compareMsg.textContent = '코드 생성에 실패했어요. 다시 시도해주세요.';
+    }
+  }catch(e){
+    compareMsg.textContent = '코드 생성에 실패했어요. 다시 시도해주세요.';
+  }
+  genCodeBtn.textContent = '코드 만들기';
+});
+
+copyCodeBtn.addEventListener('click', ()=>{
+  navigator.clipboard.writeText(myCodeText.textContent).then(()=>{
+    copyCodeBtn.textContent = '복사됨';
+    setTimeout(()=>{ copyCodeBtn.textContent = '복사'; }, 1500);
+  }).catch(()=>{});
+});
+
+compareBtn.addEventListener('click', async ()=>{
+  const code = friendCodeInput.value.trim().toUpperCase();
+  compareResult.innerHTML = '';
+  if(!code){
+    compareMsg.textContent = '코드를 입력해주세요.';
+    return;
+  }
+  if(tallies.total < 4){
+    compareMsg.textContent = '내 카드도 몇 장 더 답해야 비교할 수 있어요.';
+    return;
+  }
+  compareMsg.textContent = '불러오는 중…';
+  try{
+    const r = await window.storage.get('compare:'+code, true);
+    if(!r || !r.value){
+      compareMsg.textContent = '코드를 찾을 수 없어요. 다시 확인해주세요.';
+      return;
+    }
+    const friendData = JSON.parse(r.value);
+    compareMsg.textContent = '';
+    renderComparison(friendData.tallies);
+  }catch(e){
+    compareMsg.textContent = '코드를 찾을 수 없어요. 다시 확인해주세요.';
+  }
+});
+
+function renderComparison(friendTallies){
+  let sameCount = 0;
+  let comparedAxes = 0;
+  const rows = AXES.map(a=>{
+    const myL = tallies[a.left]||0, myR = tallies[a.right]||0, mySum = myL+myR;
+    const frL = friendTallies[a.left]||0, frR = friendTallies[a.right]||0, frSum = frL+frR;
+    const myPctL = mySum? Math.round((myL/mySum)*100) : 50;
+    const frPctL = frSum? Math.round((frL/frSum)*100) : 50;
+    if(mySum>0 && frSum>0){
+      comparedAxes++;
+      const myDom = myPctL>=50 ? 'L' : 'R';
+      const frDom = frPctL>=50 ? 'L' : 'R';
+      if(myDom===frDom) sameCount++;
+    }
+    return `
+      <div class="cmp-axis">
+        <div class="cmp-poles"><span>${a.leftLabel}</span><span>${a.rightLabel}</span></div>
+        <div class="cmp-who">나</div>
+        <div class="cmp-bar"><div class="fL" style="width:${myPctL}%"></div><div class="fR" style="width:${100-myPctL}%"></div></div>
+        <div class="cmp-who">친구</div>
+        <div class="cmp-bar friend"><div class="fL" style="width:${frPctL}%"></div><div class="fR" style="width:${100-frPctL}%"></div></div>
+      </div>
+    `;
+  }).join('');
+  const resultLine = comparedAxes>0
+    ? `<div class="cmp-result">${comparedAxes}개 축 중 ${sameCount}개에서 비슷한 성향이에요</div>`
+    : '';
+  compareResult.innerHTML = rows + resultLine;
+}
+
+loadTallies();
+</script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>질문 서랍</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #16231f;
+    --ink-soft: #24352f;
+    --paper: #efe6d3;
+    --paper-dim: #e3d8bf;
+    --rose: #b5626a;
+    --brass: #a9823c;
+    --sage: #7c9885;
+    --text-on-ink: #efe6d3;
+    --text-muted: #9faea5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% -10%, #1c2e28 0%, transparent 55%),
+      var(--ink);
+    color: var(--text-on-ink);
+    font-family:'IBM Plex Sans KR', sans-serif;
+    padding: 32px 16px 80px;
+  }
+  .wrap{ max-width: 640px; margin: 0 auto; }
+
+  .masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom: 1px solid rgba(239,230,211,0.25);
+    padding-bottom: 14px;
+    margin-bottom: 28px;
+  }
+  .masthead h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 30px;
+    margin:0;
+    letter-spacing: -0.01em;
+  }
+  .masthead .catno{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--brass);
+    letter-spacing: 0.06em;
+    text-align:right;
+    line-height:1.5;
+  }
+
+  /* Today's card */
+  .card{
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 2px;
+    padding: 28px 26px 24px;
+    position: relative;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    background-image:
+      linear-gradient(var(--paper-dim) 1px, transparent 1px);
+    background-size: 100% 28px;
+    background-position: 0 64px;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0; left:28px;
+    width:1px; height:100%;
+    background: rgba(181,98,106,0.25);
+  }
+  .card-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--rose);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+  }
+  .card-question{
+    font-family:'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    padding-left: 6px;
+  }
+  textarea{
+    width:100%;
+    min-height: 120px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: vertical;
+    font-family:'IBM Plex Sans KR', sans-serif;
+    font-size: 15.5px;
+    line-height: 28px;
+    color: var(--ink);
+    padding-left: 6px;
+  }
+  textarea::placeholder{ color:#8c8065; }
+
+  .card-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top: 10px;
+    padding-left: 6px;
+  }
+  .savebtn{
+    background: var(--ink);
+    color: var(--paper);
+    border:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    padding: 10px 18px;
+    border-radius: 2px;
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .savebtn:hover{ background:#000; }
+  .savebtn:disabled{ opacity:0.4; cursor:default; }
+  .save-status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--sage);
+    min-height: 16px;
+  }
+
+  .filed-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #6a6048;
+    margin-top: 6px;
+    padding-left: 6px;
+  }
+
+  /* Stats strip */
+  .stats{
+    display:flex;
+    gap: 22px;
+    margin: 22px 2px 30px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .stats b{
+    display:block;
+    font-family:'Fraunces', serif;
+    font-size: 22px;
+    color: var(--text-on-ink);
+    font-weight:600;
+  }
+
+  /* Archive */
+  .archive-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 8px 2px 12px;
+    border-top: 1px solid rgba(239,230,211,0.2);
+    padding-top: 18px;
+  }
+  .empty-archive{
+    font-size: 14px;
+    color: var(--text-muted);
+    padding: 10px 2px 20px;
+    line-height:1.6;
+  }
+  .drawer-row{
+    display:flex;
+    align-items:baseline;
+    gap: 14px;
+    padding: 13px 10px;
+    border-bottom: 1px solid rgba(239,230,211,0.12);
+    cursor:pointer;
+    transition: background .12s ease;
+  }
+  .drawer-row:hover{ background: rgba(239,230,211,0.06); }
+  .drawer-row .idx{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--rose);
+    min-width: 46px;
+  }
+  .drawer-row .meta{ flex:1; min-width:0; }
+  .drawer-row .q{
+    font-family:'Fraunces', serif;
+    font-size: 15px;
+    color: var(--text-on-ink);
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+  .drawer-row .d{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Modal */
+  .modal-bg{
+    position: fixed; inset:0;
+    background: rgba(10,15,13,0.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-bg.open{ display:flex; }
+  .modal{
+    background: var(--paper);
+    color: var(--ink);
+    max-width: 500px;
+    width:100%;
+    max-height: 82vh;
+    overflow-y:auto;
+    padding: 26px;
+    border-radius: 2px;
+    position:relative;
+  }
+  .modal .idx{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--rose);
+    margin-bottom: 8px;
+    display:block;
+  }
+  .modal h3{
+    font-family:'Fraunces', serif;
+    font-size: 20px;
+    margin: 0 0 6px;
+  }
+  .modal .d{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color:#6a6048;
+    margin-bottom: 16px;
+  }
+  .modal p{
+    font-size: 15px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+  .modal-close{
+    position:absolute; top:16px; right:18px;
+    background:none; border:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color:#6a6048;
+    cursor:pointer;
+  }
+  .modal-del{
+    margin-top: 18px;
+    background:none;
+    border: 1px solid rgba(181,98,106,0.5);
+    color: var(--rose);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 7px 14px;
+    border-radius: 2px;
+    cursor:pointer;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .card{ animation: rise .35s ease; }
+    @keyframes rise{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>질문 서랍</h1>
+    <div class="catno" id="catno">CARD&nbsp;NO. —</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label" id="cardLabel">오늘의 질문</div>
+    <div class="card-question" id="questionText">불러오는 중…</div>
+    <textarea id="answerInput" placeholder="여기에 적어보세요. 정답은 없어요."></textarea>
+    <div class="card-footer">
+      <button class="savebtn" id="saveBtn">서랍에 넣기</button>
+      <span class="save-status" id="saveStatus"></span>
+    </div>
+    <div class="filed-note" id="filedNote"></div>
+  </div>
+
+  <div class="stats">
+    <div><b id="statTotal">0</b>보관된 카드</div>
+    <div><b id="statStreak">0</b>연속 기록일</div>
+  </div>
+
+  <div class="archive-title">보관함</div>
+  <div id="archiveList"></div>
+  <div class="empty-archive" id="emptyArchive" style="display:none;">
+    아직 채워진 카드가 없어요. 오늘 한 장부터 시작해보세요.
+  </div>
+
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">닫기 ✕</button>
+    <span class="idx" id="modalIdx"></span>
+    <h3 id="modalQ"></h3>
+    <div class="d" id="modalDate"></div>
+    <p id="modalA"></p>
+    <button class="modal-del" id="modalDel">이 카드 삭제하기</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+"요즘 나를 가장 편안하게 만드는 순간은 언제인가요?",
+"최근에 나답다고 느꼈던 순간이 있었나요?",
+"지금 가장 미루고 있는 일은 무엇이고, 왜 미루고 있을까요?",
+"나는 어떤 것에 쉽게 질투를 느끼나요?",
+"오늘 하루 중 가장 마음에 남는 장면은 무엇인가요?",
+"내가 자주 남에게 숨기는 감정은 무엇인가요?",
+"어릴 적 나와 지금의 나는 무엇이 가장 달라졌을까요?",
+"나는 어떤 칭찬을 들을 때 가장 기쁜가요?",
+"최근에 스스로를 다그쳤던 순간이 있다면요?",
+"내가 관계에서 가장 중요하게 여기는 것은 무엇인가요?",
+"지금 이 순간, 무엇이 가장 걱정되나요?",
+"내가 후회하고 있는 선택이 있다면 무엇인가요?",
+"나는 어떤 상황에서 가장 솔직해지나요?",
+"최근에 나를 웃게 만든 것은 무엇이었나요?",
+"내가 정말 원하는 것과, 원한다고 착각하는 것은 어떻게 다를까요?",
+"나는 실패를 어떻게 받아들이는 편인가요?",
+"오늘 나에게 필요한 위로는 무엇인가요?",
+"내가 가장 두려워하는 것은 무엇인가요?",
+"나는 혼자 있을 때 주로 무슨 생각을 하나요?",
+"최근 누군가에게 서운했던 순간이 있었나요?",
+"나는 어떤 방식으로 사랑을 표현하나요?",
+"지금 내 삶에서 가장 바꾸고 싶은 한 가지는?",
+"나는 어떤 순간에 시간 가는 줄 모르나요?",
+"내가 스스로에게 자주 하는 거짓말이 있다면?",
+"나는 갈등 상황에서 보통 어떻게 행동하나요?",
+"최근에 배운 것 중 나를 바꾼 것이 있다면?",
+"나는 어떤 사람 곁에 있을 때 가장 나답나요?",
+"오늘 내가 잘한 일 한 가지는 무엇인가요?",
+"내가 놓아버리고 싶은 습관은 무엇인가요?",
+"나는 어떤 실수를 반복하는 편인가요?",
+"지금 나에게 가장 큰 힘이 되는 것은 무엇인가요?",
+"나는 인정받고 싶을 때 어떤 행동을 하나요?",
+"최근 나를 가장 지치게 한 것은 무엇인가요?",
+"나는 어떤 이야기를 할 때 눈이 반짝이나요?",
+"내가 남들보다 유독 예민하게 반응하는 주제는?",
+"지금 이루고 싶은 작은 목표가 있다면?",
+"나는 스트레스를 받을 때 무엇으로 푸나요?",
+"최근에 누군가를 진심으로 이해했다고 느낀 순간은?",
+"나는 어떤 칭찬을 스스로에게 해주고 싶나요?",
+"오늘 하루, 나에게 묻고 싶은 질문은 무엇인가요?"
+];
+
+const EPOCH = new Date(2025,0,1);
+function dayIndex(d){
+  return Math.floor((d - EPOCH) / 86400000);
+}
+function todayKey(){
+  const n = new Date();
+  const y=n.getFullYear(), m=String(n.getMonth()+1).padStart(2,'0'), day=String(n.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function fmtDate(key){
+  const [y,m,d] = key.split('-');
+  return `${y}. ${m}. ${d}`;
+}
+function questionForDate(key){
+  const [y,m,d] = key.split('-').map(Number);
+  const idx = ((dayIndex(new Date(y,m-1,d)) % QUESTIONS.length) + QUESTIONS.length) % QUESTIONS.length;
+  return QUESTIONS[idx];
+}
+
+let allEntries = {}; // key: date -> {question, answer}
+let currentKey = todayKey();
+
+const questionText = document.getElementById('questionText');
+const answerInput = document.getElementById('answerInput');
+const saveBtn = document.getElementById('saveBtn');
+const saveStatus = document.getElementById('saveStatus');
+const filedNote = document.getElementById('filedNote');
+const catno = document.getElementById('catno');
+const archiveList = document.getElementById('archiveList');
+const emptyArchive = document.getElementById('emptyArchive');
+const statTotal = document.getElementById('statTotal');
+const statStreak = document.getElementById('statStreak');
+
+async function loadAll(){
+  try{
+    const listRes = await window.storage.list('entry:', false);
+    const keys = (listRes && listRes.keys) || [];
+    for(const k of keys){
+      try{
+        const r = await window.storage.get(k, false);
+        if(r && r.value){
+          const dateKey = k.replace('entry:','');
+          allEntries[dateKey] = JSON.parse(r.value);
+        }
+      }catch(e){ /* skip missing */ }
+    }
+  }catch(e){
+    console.error('load error', e);
+  }
+  render();
+}
+
+function computeStreak(){
+  let streak = 0;
+  let cursor = new Date();
+  while(true){
+    const y=cursor.getFullYear(), m=String(cursor.getMonth()+1).padStart(2,'0'), d=String(cursor.getDate()).padStart(2,'0');
+    const key = `${y}-${m}-${d}`;
+    if(allEntries[key] && allEntries[key].answer && allEntries[key].answer.trim().length>0){
+      streak++;
+      cursor.setDate(cursor.getDate()-1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function render(){
+  const q = questionForDate(currentKey);
+  questionText.textContent = q;
+  const existing = allEntries[currentKey];
+  answerInput.value = existing ? existing.answer : '';
+  filedNote.textContent = existing ? `이 카드는 ${fmtDate(currentKey)}에 서랍에 넣었어요. 수정하면 자동으로 갱신됩니다.` : '';
+
+  const dIdx = dayIndex(new Date());
+  catno.textContent = `CARD NO. ${String(dIdx).padStart(4,'0')}`;
+
+  // stats
+  const total = Object.values(allEntries).filter(e=>e.answer && e.answer.trim()).length;
+  statTotal.textContent = total;
+  statStreak.textContent = computeStreak();
+
+  // archive, most recent first, excluding today (today shown in main card once saved it'll still appear here too, that's fine)
+  const dates = Object.keys(allEntries)
+    .filter(k => allEntries[k].answer && allEntries[k].answer.trim())
+    .sort((a,b)=> b.localeCompare(a));
+
+  archiveList.innerHTML = '';
+  if(dates.length === 0){
+    emptyArchive.style.display = 'block';
+  } else {
+    emptyArchive.style.display = 'none';
+    dates.forEach(k=>{
+      const entry = allEntries[k];
+      const row = document.createElement('div');
+      row.className = 'drawer-row';
+      const idxNum = ((dayIndex(new Date(...k.split('-').map((v,i)=> i===1? v-1 : Number(v)))) % QUESTIONS.length) + QUESTIONS.length) % QUESTIONS.length;
+      row.innerHTML = `
+        <div class="idx">#${String(idxNum).padStart(2,'0')}</div>
+        <div class="meta">
+          <div class="q">${entry.question}</div>
+          <div class="d">${fmtDate(k)}</div>
+        </div>
+      `;
+      row.addEventListener('click', ()=> openModal(k));
+      archiveList.appendChild(row);
+    });
+  }
+}
+
+async function saveCurrent(){
+  const text = answerInput.value;
+  const q = questionForDate(currentKey);
+  saveBtn.disabled = true;
+  saveStatus.textContent = '저장 중…';
+  try{
+    if(text.trim().length === 0){
+      // treat as delete if emptied
+      await window.storage.delete('entry:'+currentKey, false).catch(()=>{});
+      delete allEntries[currentKey];
+      saveStatus.textContent = '';
+    } else {
+      const payload = { question: q, answer: text };
+      const res = await window.storage.set('entry:'+currentKey, JSON.stringify(payload), false);
+      if(res){
+        allEntries[currentKey] = payload;
+        saveStatus.textContent = '서랍에 넣었어요 ✓';
+      } else {
+        saveStatus.textContent = '저장 실패, 다시 시도해주세요';
+      }
+    }
+  }catch(e){
+    console.error(e);
+    saveStatus.textContent = '저장 실패, 다시 시도해주세요';
+  }
+  saveBtn.disabled = false;
+  render();
+  setTimeout(()=>{ saveStatus.textContent=''; }, 2500);
+}
+
+saveBtn.addEventListener('click', saveCurrent);
+
+// Modal
+const modalBg = document.getElementById('modalBg');
+const modalIdx = document.getElementById('modalIdx');
+const modalQ = document.getElementById('modalQ');
+const modalDate = document.getElementById('modalDate');
+const modalA = document.getElementById('modalA');
+const modalClose = document.getElementById('modalClose');
+const modalDel = document.getElementById('modalDel');
+let modalKey = null;
+
+function openModal(key){
+  modalKey = key;
+  const entry = allEntries[key];
+  const idxNum = ((dayIndex(new Date(...key.split('-').map((v,i)=> i===1? v-1 : Number(v)))) % QUESTIONS.length) + QUESTIONS.length) % QUESTIONS.length;
+  modalIdx.textContent = `#${String(idxNum).padStart(2,'0')}`;
+  modalQ.textContent = entry.question;
+  modalDate.textContent = fmtDate(key);
+  modalA.textContent = entry.answer;
+  modalBg.classList.add('open');
+}
+function closeModal(){
+  modalBg.classList.remove('open');
+  modalKey = null;
+}
+modalClose.addEventListener('click', closeModal);
+modalBg.addEventListener('click', (e)=>{ if(e.target === modalBg) closeModal(); });
+modalDel.addEventListener('click', async ()=>{
+  if(!modalKey) return;
+  try{
+    await window.storage.delete('entry:'+modalKey, false);
+  }catch(e){ /* ignore */ }
+  delete allEntries[modalKey];
+  closeModal();
+  render();
+});
+
+loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+[
+  {"key":"bigfive_openness","family":"BigFive","type":"bipolar","name":"개방성","pole_left":"stable","pole_right":"adventure","pole_left_label":"안정형","pole_right_label":"모험형"},
+  {"key":"bigfive_conscientiousness","family":"BigFive","type":"bipolar","name":"성실성","pole_left":"planner","pole_right":"spontaneous","pole_left_label":"계획형","pole_right_label":"즉흥형"},
+  {"key":"bigfive_extraversion","family":"BigFive","type":"bipolar","name":"외향성","pole_left":"relationship","pole_right":"independence","pole_left_label":"관계형","pole_right_label":"독립형"},
+  {"key":"bigfive_agreeableness","family":"BigFive","type":"bipolar","name":"친화성","pole_left":"logic","pole_right":"emotion","pole_left_label":"이성형","pole_right_label":"감성형"},
+  {"key":"bigfive_stability","family":"BigFive","type":"bipolar","name":"정서안정성","pole_left":"steady","pole_right":"reactive","pole_left_label":"안정적인 편","pole_right_label":"기복 있는 편"},
+
+  {"key":"riasec_realistic","family":"RIASEC","type":"independent","name":"현장형(R)"},
+  {"key":"riasec_investigative","family":"RIASEC","type":"independent","name":"탐구형(I)"},
+  {"key":"riasec_artistic","family":"RIASEC","type":"independent","name":"예술형(A)"},
+  {"key":"riasec_social","family":"RIASEC","type":"independent","name":"사회형(S)"},
+  {"key":"riasec_enterprising","family":"RIASEC","type":"independent","name":"진취형(E)"},
+  {"key":"riasec_conventional","family":"RIASEC","type":"independent","name":"관습형(C)"},
+
+  {"key":"decision_style","family":"DecisionMaking","type":"bipolar","name":"의사결정스타일","pole_left":"quick","pole_right":"deliberate","pole_left_label":"직관적 결정","pole_right_label":"신중한 결정"},
+  {"key":"risk_taking","family":"DecisionMaking","type":"bipolar","name":"위험감수성향","pole_left":"safe","pole_right":"risky","pole_left_label":"안전 추구","pole_right_label":"위험 감수"},
+  {"key":"locus_of_control","family":"Cognition","type":"bipolar","name":"통제소재","pole_left":"internal","pole_right":"external","pole_left_label":"내적 통제","pole_right_label":"외적 통제"},
+
+  {"key":"conflict_style","family":"Relationship","type":"bipolar","name":"갈등대응스타일","pole_left":"direct","pole_right":"avoidant","pole_left_label":"직면형","pole_right_label":"회피형"},
+  {"key":"communication_tone","family":"Relationship","type":"bipolar","name":"커뮤니케이션톤","pole_left":"blunt","pole_right":"tactful","pole_left_label":"직설적","pole_right_label":"완곡한"},
+  {"key":"love_language","family":"Relationship","type":"independent","name":"애정표현방식"},
+
+  {"key":"time_perspective","family":"Lifestyle","type":"bipolar","name":"시간관","pole_left":"past","pole_right":"future","pole_left_label":"과거지향","pole_right_label":"미래지향"},
+  {"key":"spending_style","family":"Lifestyle","type":"bipolar","name":"소비성향","pole_left":"planned","pole_right":"impulsive","pole_left_label":"계획소비","pole_right_label":"충동소비"},
+
+  {"key":"learning_motivation","family":"Learning","type":"bipolar","name":"학업동기유형","pole_left":"intrinsic","pole_right":"extrinsic","pole_left_label":"내적동기","pole_right_label":"외적동기"},
+  {"key":"study_pattern","family":"Learning","type":"bipolar","name":"공부방식","pole_left":"cram","pole_right":"steady","pole_left_label":"몰아서","pole_right_label":"나눠서"}
+]
