@@ -331,6 +331,12 @@
     color: #8078a8;
     padding: 30px 10px 34px;
   }
+  .starmap-report{
+    font-size: 12.5px;
+    color: #c9bdf0;
+    line-height: 1.7;
+    padding: 4px 14px 16px;
+  }
 </style>
 </head>
 <body>
@@ -361,8 +367,9 @@
   <div class="profile-panel" id="profilePanel">
     <div id="profileEmpty" class="profile-empty">아직 데이터가 부족해요. 몇 번 더 선택해보세요.</div>
     <div class="starmap-card">
-      <div class="starmap-title">내 성단</div>
+      <div class="starmap-title" id="starmapTitle">내 성단</div>
       <div id="starmapWrap"></div>
+      <div class="starmap-report" id="starmapReport"></div>
     </div>
     <div id="axesWrap"></div>
     <div class="badge-line" id="badgeLine"></div>
@@ -395,8 +402,48 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const PAIRS = [
+// ---- Supabase 연결 설정 ----
+const SUPABASE_URL = 'https://dmrokelruhncgewmshay.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_r00_v7TZXpQfBcwqf48N4g_LcnxU8NY';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function getUserId(){
+  let id = localStorage.getItem('tammi_anon_user_id');
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem('tammi_anon_user_id', id);
+  }
+  return id;
+}
+const USER_ID = getUserId();
+
+const BIGFIVE_AXIS_MAP = {
+  bigfive_openness: 'stability',
+  bigfive_conscientiousness: 'plan',
+  bigfive_extraversion: 'social',
+  bigfive_agreeableness: 'mind',
+  bigfive_stability: 'mood',
+};
+
+// 성단 해석문에 쓰는, 각 극(pole)의 자연스러운 서술형 문구
+// (interpretation_reference.md의 카피 톤을 그대로 가져옴)
+const POLE_PHRASES = {
+  stable: '익숙한 것에서 안정감을 느끼는 편이에요',
+  adventure: '새로운 경험과 변화에 끌리는 편이에요',
+  planner: '미리 계획하고 체계적으로 움직이는 편이에요',
+  spontaneous: '그때그때 상황에 맞춰 유연하게 움직이는 편이에요',
+  relationship: '사람들과 함께할 때 에너지를 얻는 편이에요',
+  independence: '혼자만의 시간에서 에너지를 회복하는 편이에요',
+  logic: '상황을 논리와 사실 위주로 판단하는 편이에요',
+  emotion: '상황을 감정과 분위기 위주로 판단하는 편이에요',
+  steady: '예상 밖의 일이 생겨도 비교적 담담하게 넘기는 편이에요',
+  reactive: '상황에 따라 감정이 크게 오르내리는 편이에요',
+};
+const REPORT_CONNECTORS = ['', '그리고 ', '다만 ', '그런가 하면 ', '마지막으로 '];
+
+const FALLBACK_PAIRS = [
   {axis:'stability', top:{pole:'stable', text:'평생 한 동네에서 살기'}, bottom:{pole:'adventure', text:'매년 새로운 도시로 이사하기'}},
   {axis:'stability', top:{pole:'stable', text:'안정적인 월급 받기'}, bottom:{pole:'adventure', text:'대박 아니면 쪽박, 창업하기'}},
   {axis:'stability', top:{pole:'stable', text:'늘 가던 맛집 가기'}, bottom:{pole:'adventure', text:'처음 보는 음식 도전하기'}},
@@ -430,11 +477,79 @@ const PAIRS = [
   {axis:'social', top:{pole:'relationship', text:'연락 자주 하는 편'}, bottom:{pole:'independence', text:'연락 뜸해도 괜찮은 편'}}
 ];
 
+async function fetchQuestionsFromDB(){
+  const { data: questions, error: qErr } = await db
+    .from('questions')
+    .select('id, options')
+    .eq('format_type', 'ab_dual')
+    .limit(300);
+  if(qErr || !questions || questions.length === 0){
+    console.warn('DB 문항 조회 실패, 로컬 fallback 사용', qErr);
+    return null;
+  }
+
+  const questionIds = questions.map(q => q.id);
+  const { data: links, error: lErr } = await db
+    .from('question_trait_links')
+    .select('question_id, option_key, pole, weight, traits(key, family)')
+    .in('question_id', questionIds);
+  if(lErr || !links){
+    console.warn('trait 연결 조회 실패, 로컬 fallback 사용', lErr);
+    return null;
+  }
+
+  // 옵션 하나에 여러 특성이 걸려있을 수 있으므로, weight가 가장 높은(주 특성) 링크를 대표로 삼는다
+  const primaryLinkByQuestionOption = {};
+  links.forEach(l => {
+    const key = `${l.question_id}:${l.option_key}`;
+    const existing = primaryLinkByQuestionOption[key];
+    if(!existing || l.weight > existing.weight){
+      primaryLinkByQuestionOption[key] = {
+        pole: l.pole,
+        weight: l.weight,
+        isBigFive: l.traits?.family === 'BigFive',
+        axis: l.traits?.family === 'BigFive' ? BIGFIVE_AXIS_MAP[l.traits.key] : null,
+      };
+    }
+  });
+
+  const deckItems = [];
+  questions.forEach(q => {
+    const linkA = primaryLinkByQuestionOption[`${q.id}:a`];
+    const linkB = primaryLinkByQuestionOption[`${q.id}:b`];
+    const optA = q.options.find(o => o.key === 'a');
+    const optB = q.options.find(o => o.key === 'b');
+    if(!linkA || !linkB || !optA || !optB) return;
+    deckItems.push({
+      questionId: q.id,
+      axis: linkA.axis,
+      top: {pole: linkA.isBigFive ? linkA.pole : null, text: optA.text, optionKey: 'a'},
+      bottom: {pole: linkB.isBigFive ? linkB.pole : null, text: optB.text, optionKey: 'b'},
+    });
+  });
+
+  return deckItems.length > 0 ? deckItems : null;
+}
+
+async function saveResponseToDB(questionId, optionKey){
+  if(!questionId) return;
+  try{
+    await db.from('responses').insert({
+      user_id: USER_ID,
+      question_id: questionId,
+      chosen_option: optionKey,
+    });
+  }catch(e){
+    console.warn('응답 저장 실패 (네트워크 문제일 수 있음)', e);
+  }
+}
+
 const AXES = [
   {key:'stability', left:'stable', right:'adventure', leftLabel:'안정형', rightLabel:'모험형'},
   {key:'mind', left:'logic', right:'emotion', leftLabel:'이성형', rightLabel:'감성형'},
   {key:'plan', left:'planner', right:'spontaneous', leftLabel:'계획형', rightLabel:'즉흥형'},
-  {key:'social', left:'relationship', right:'independence', leftLabel:'관계형', rightLabel:'독립형'}
+  {key:'social', left:'relationship', right:'independence', leftLabel:'관계형', rightLabel:'독립형'},
+  {key:'mood', left:'steady', right:'reactive', leftLabel:'차분형', rightLabel:'예민형'}
 ];
 
 const STAR_POLES = [
@@ -442,10 +557,12 @@ const STAR_POLES = [
   {pole:'planner', opp:'spontaneous', label:'계획'},
   {pole:'logic', opp:'emotion', label:'이성'},
   {pole:'relationship', opp:'independence', label:'관계'},
+  {pole:'steady', opp:'reactive', label:'차분'},
   {pole:'adventure', opp:'stable', label:'모험'},
   {pole:'spontaneous', opp:'planner', label:'즉흥'},
   {pole:'emotion', opp:'logic', label:'감성'},
-  {pole:'independence', opp:'relationship', label:'독립'}
+  {pole:'independence', opp:'relationship', label:'독립'},
+  {pole:'reactive', opp:'steady', label:'예민'}
 ];
 const BG_STARS = [
   [20,30,1.2,0.3],[60,15,0.8,0.4],[280,25,1,0.25],[300,60,0.7,0.3],
@@ -454,13 +571,57 @@ const BG_STARS = [
   [10,220,0.7,0.3],[310,210,0.9,0.3],[60,270,0.6,0.25],[250,50,0.8,0.3]
 ];
 
+// 축별로 얼마나 답이 쌓였는지(신뢰도)와, 어느 쪽으로 기울었는지(강도)를 계산
+function computeAxisStats(){
+  return AXES.map(a=>{
+    const l = tallies[a.left]||0, r = tallies[a.right]||0;
+    const sum = l + r;
+    const pctL = sum ? l/sum : 0.5;
+    const dominantLabel = pctL >= 0.5 ? a.leftLabel : a.rightLabel;
+    const dominantPole = pctL >= 0.5 ? a.left : a.right;
+    return { ...a, sum, pctL, dominantLabel, dominantPole, strength: Math.abs(pctL-0.5) };
+  });
+}
+
+// 신뢰도 있는(답이 충분히 쌓인) 축들을 강도 순으로 정렬해서, 별자리 제목 + 해석 문단을 만든다
+function buildConstellationReport(){
+  const CONFIDENCE_MIN = 2; // 이 축은 최소 2번은 답해야 "안다"고 침
+  const qualified = computeAxisStats()
+    .filter(a => a.sum >= CONFIDENCE_MIN)
+    .sort((a,b) => b.strength - a.strength);
+
+  if(qualified.length === 0){
+    return { title: '내 성단', paragraph: '' };
+  }
+
+  const titleParts = qualified.slice(0,2).map(a=>a.dominantLabel);
+  const title = titleParts.join('·') + ' 별자리';
+
+  const paragraph = qualified
+    .map((a,i) => REPORT_CONNECTORS[Math.min(i, REPORT_CONNECTORS.length-1)] + POLE_PHRASES[a.dominantPole])
+    .join('. ') + '.';
+
+  return { title, paragraph };
+}
+
 function renderStarmap(){
   const wrap = document.getElementById('starmapWrap');
+  const titleEl = document.getElementById('starmapTitle');
+  const reportEl = document.getElementById('starmapReport');
+
   if(tallies.total < 4){
     wrap.innerHTML = '<div class="starmap-empty">몇 번 더 선택하면 나만의 별자리가 나타나요</div>';
+    titleEl.textContent = '내 성단';
+    reportEl.textContent = '';
     return;
   }
+
+  const { title, paragraph } = buildConstellationReport();
+  titleEl.textContent = title;
+  reportEl.textContent = paragraph;
+
   const cx=160, cy=160, minR=22, maxR=95, labelR=118;
+  const angleStep = 360 / STAR_POLES.length;
   const bgStars = BG_STARS.map(([x,y,r,o])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${o}"/>`).join('');
   const guides = [minR, (minR+maxR)/2, maxR].map(r=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#3a3160" stroke-width="0.6"/>`).join('');
 
@@ -468,19 +629,25 @@ function renderStarmap(){
     const sum = (tallies[p.pole]||0) + (tallies[p.opp]||0);
     const pct = sum ? (tallies[p.pole]||0)/sum : 0.5;
     const r = minR + pct*(maxR-minR);
-    const angle = (i*45 - 90) * Math.PI/180;
+    const angle = (i*angleStep - 90) * Math.PI/180;
     const x = cx + r*Math.cos(angle);
     const y = cy + r*Math.sin(angle);
     const lx = cx + labelR*Math.cos(angle);
     const ly = cy + labelR*Math.sin(angle);
-    return {x,y,lx,ly,label:p.label};
+    // 그 축에 답을 많이 할수록(최대 8번 기준) 별이 더 밝고 커짐 -- "탐구가 쌓이는" 느낌
+    const confidence = Math.min(1, sum/8);
+    const glowR = 5 + 4*confidence;
+    const coreR = 2 + 2*confidence;
+    const glowOpacity = 0.08 + 0.25*confidence;
+    const coreOpacity = 0.35 + 0.65*confidence;
+    return {x,y,lx,ly,label:p.label, glowR, coreR, glowOpacity, coreOpacity};
   });
 
   const spokes = pts.map(p=>`<line x1="${cx}" y1="${cy}" x2="${p.lx*0.86+cx*0.14}" y2="${p.ly*0.86+cy*0.14}" stroke="#3a3160" stroke-width="0.5"/>`).join('');
   const polygonPath = 'M' + pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L') + 'Z';
   const stars = pts.map(p=>`
-    <circle cx="${p.x}" cy="${p.y}" r="7" fill="#e2b04a" opacity="0.22"/>
-    <circle cx="${p.x}" cy="${p.y}" r="3" fill="#f5d998"/>
+    <circle cx="${p.x}" cy="${p.y}" r="${p.glowR}" fill="#e2b04a" opacity="${p.glowOpacity}"/>
+    <circle cx="${p.x}" cy="${p.y}" r="${p.coreR}" fill="#f5d998" opacity="${p.coreOpacity}"/>
     <text x="${p.lx}" y="${p.ly}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#c9bdf0" font-family="'Noto Sans KR',sans-serif">${p.label}</text>
   `).join('');
 
@@ -504,7 +671,8 @@ function shuffle(arr){
   return a;
 }
 
-let deck = shuffle(PAIRS);
+let sourcePairs = FALLBACK_PAIRS;
+let deck = shuffle(sourcePairs);
 let deckPtr = 0;
 let current = null;
 let tallies = {};
@@ -526,7 +694,7 @@ const badgeLine = document.getElementById('badgeLine');
 
 function nextCard(){
   if(deckPtr >= deck.length){
-    deck = shuffle(PAIRS);
+    deck = shuffle(sourcePairs);
     deckPtr = 0;
   }
   current = deck[deckPtr++];
@@ -536,12 +704,19 @@ function nextCard(){
 
 async function loadTallies(){
   try{
-    const r = await window.storage.get('profile:tallies', false);
-    if(r && r.value){
-      const saved = JSON.parse(r.value);
-      tallies = Object.assign(tallies, saved);
+    const saved = localStorage.getItem('tammi_profile_tallies');
+    if(saved){
+      tallies = Object.assign(tallies, JSON.parse(saved));
     }
   }catch(e){ /* no saved data yet */ }
+
+  const dbPairs = await fetchQuestionsFromDB();
+  if(dbPairs){
+    sourcePairs = dbPairs;
+  }
+  deck = shuffle(sourcePairs);
+  deckPtr = 0;
+
   renderProfile();
   nextCard();
   duel.classList.remove('enter');
@@ -551,7 +726,7 @@ async function loadTallies(){
 
 async function saveTallies(){
   try{
-    await window.storage.set('profile:tallies', JSON.stringify(tallies), false);
+    localStorage.setItem('tammi_profile_tallies', JSON.stringify(tallies));
   }catch(e){ console.error('save failed', e); }
 }
 
@@ -587,10 +762,13 @@ function renderProfile(){
   badgeLine.textContent = dominant.length ? dominant.join(' · ') : '';
 }
 
-function choose(pole, direction){
-  tallies[pole] = (tallies[pole]||0) + 1;
+function choose(pole, direction, questionId, optionKey){
+  if(pole){
+    tallies[pole] = (tallies[pole]||0) + 1;
+  }
   tallies.total += 1;
   saveTallies();
+  saveResponseToDB(questionId, optionKey);
   renderProfile();
 
   duel.classList.add(direction === 'top' ? 'flying-top' : 'flying-bottom');
@@ -603,8 +781,8 @@ function choose(pole, direction){
   }, 180);
 }
 
-optTop.addEventListener('click', ()=> choose(current.top.pole, 'top'));
-optBottom.addEventListener('click', ()=> choose(current.bottom.pole, 'bottom'));
+optTop.addEventListener('click', ()=> choose(current.top.pole, 'top', current.questionId, current.top.optionKey));
+optBottom.addEventListener('click', ()=> choose(current.bottom.pole, 'bottom', current.questionId, current.bottom.optionKey));
 skipBtn.addEventListener('click', ()=>{
   nextCard();
   duel.classList.remove('enter');
@@ -649,8 +827,8 @@ genCodeBtn.addEventListener('click', async ()=>{
   const code = genCode();
   genCodeBtn.textContent = '만드는 중…';
   try{
-    const res = await window.storage.set('compare:'+code, JSON.stringify({tallies, savedAt: Date.now()}), true);
-    if(res){
+    const { error } = await db.from('shared_codes').upsert({ code, tallies });
+    if(!error){
       myCodeText.textContent = code;
       myCodeBox.style.display = 'flex';
       genCodeBtn.style.display = 'none';
@@ -683,14 +861,13 @@ compareBtn.addEventListener('click', async ()=>{
   }
   compareMsg.textContent = '불러오는 중…';
   try{
-    const r = await window.storage.get('compare:'+code, true);
-    if(!r || !r.value){
+    const { data, error } = await db.from('shared_codes').select('tallies').eq('code', code).maybeSingle();
+    if(error || !data){
       compareMsg.textContent = '코드를 찾을 수 없어요. 다시 확인해주세요.';
       return;
     }
-    const friendData = JSON.parse(r.value);
     compareMsg.textContent = '';
-    renderComparison(friendData.tallies);
+    renderComparison(data.tallies);
   }catch(e){
     compareMsg.textContent = '코드를 찾을 수 없어요. 다시 확인해주세요.';
   }
