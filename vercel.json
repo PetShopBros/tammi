@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/prototypes/tammi_card_deck.html" },
-    { "source": "/result", "destination": "/prototypes/tammi_result_blob.html" }
+    { "source": "/result", "destination": "/prototypes/tammi_result_blob.html" },
+    { "source": "/progress", "destination": "/prototypes/tammi_progress.html" }
   ]
 }

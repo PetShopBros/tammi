@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>tammi 진행도</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #eeeaf6;
+    --ink: #241c35;
+    --plum: #4b3869;
+    --mustard: #e2963c;
+    --coral: #e1566b;
+    --muted: #8b84a0;
+    --card: #ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background: var(--bg); color: var(--ink);
+    font-family:'Noto Sans KR', sans-serif; padding: 24px 16px 60px;
+    display:flex; justify-content:center;
+  }
+  .wrap{ width:100%; max-width: 440px; }
+
+  nav{ display:flex; gap:8px; margin-bottom: 18px; }
+  nav a{
+    flex:1; text-align:center; padding: 9px 0; border-radius: 10px;
+    font-size: 12px; text-decoration:none; color: var(--plum); background: var(--card);
+  }
+  nav a.active{ background: var(--plum); color:#fff; font-weight:700; }
+
+  header{ text-align:center; margin-bottom: 20px; }
+  header h1{
+    font-family:'Space Grotesk','Noto Sans KR', sans-serif; font-weight:700;
+    font-size: 22px; margin: 0 0 4px;
+  }
+  header p{ margin:0; font-size: 13px; color: var(--muted); }
+
+  .card{
+    background: var(--card); border-radius: 16px; padding: 18px 20px;
+    margin-bottom: 14px; box-shadow: 0 4px 16px rgba(36,28,53,0.06);
+  }
+  .card h2{ font-size: 14px; font-weight:700; margin: 0 0 12px; }
+
+  .streakRow{ display:flex; align-items:center; gap:14px; }
+  .streakFlame{ font-size: 34px; line-height:1; }
+  .streakNum{ font-family:'Space Grotesk',sans-serif; font-size: 26px; font-weight:700; }
+  .streakLabel{ font-size: 12px; color: var(--muted); }
+
+  .goalRing{ display:flex; align-items:center; gap:16px; }
+  .goalText{ font-size: 13px; color: var(--muted); }
+  .goalText b{ color: var(--ink); font-size: 16px; }
+  .goalEditRow{ display:flex; gap:6px; margin-top: 10px; }
+  .goalEditRow input{ width: 60px; padding: 5px 8px; border:1px solid var(--bg); border-radius:8px; font-size:13px; }
+  .goalEditRow button{ padding: 5px 10px; border-radius:8px; border:none; background: var(--plum); color:#fff; font-size:12px; cursor:pointer; }
+
+  .heatmapGrid{ display:grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+  .heatCell{ aspect-ratio: 1; border-radius: 3px; background: var(--bg); }
+  .heatLegend{ display:flex; align-items:center; gap:4px; margin-top:10px; font-size:10px; color:var(--muted); justify-content:flex-end; }
+  .heatLegend .heatCell{ width:9px; height:9px; }
+
+  .chapterRow{ margin-bottom: 12px; }
+  .chapterRow .top{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px; }
+  .chapterRow .name{ color: var(--plum); font-weight:500; }
+  .chapterRow .frac{ color: var(--muted); }
+  .chapterTrack{ height:7px; background: var(--bg); border-radius:4px; overflow:hidden; }
+  .chapterFill{ height:100%; background: linear-gradient(90deg, var(--coral), var(--mustard)); }
+
+  .loading{ text-align:center; color: var(--muted); font-size: 13px; padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a href="/">답하기</a>
+    <a href="/progress" class="active">진행도</a>
+    <a href="/result">결과</a>
+  </nav>
+
+  <header>
+    <h1>일간 진행도</h1>
+    <p id="subheader">불러오는 중...</p>
+  </header>
+
+  <div id="content"><div class="loading">불러오는 중...</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://dmrokelruhncgewmshay.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_r00_v7TZXpQfBcwqf48N4g_LcnxU8NY';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function getUserId(){
+  let id = localStorage.getItem('tammi_anon_user_id');
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem('tammi_anon_user_id', id);
+  }
+  return id;
+}
+const USER_ID = getUserId();
+
+const GOAL_KEY = 'tammi_daily_goal';
+function getDailyGoal(){
+  const saved = localStorage.getItem(GOAL_KEY);
+  return saved ? Number(saved) : 5; // 기본값 5문항
+}
+function setDailyGoal(n){
+  localStorage.setItem(GOAL_KEY, String(n));
+}
+
+// 로컬 기준 YYYY-MM-DD (UTC 변환으로 인한 날짜 밀림 방지)
+function toLocalDateKey(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+const CHAPTERS = [
+  { family: 'BigFive', label: '성향 기초', total: 5 },
+  { family: 'RIASEC', label: '관심 유형', total: 6 },
+  { family: 'DecisionMaking', label: '의사결정', total: 2 },
+  { family: 'Cognition', label: '인지 성향', total: 1 },
+  { family: 'Relationship', label: '관계 스타일', total: 7 },
+  { family: 'Lifestyle', label: '라이프스타일', total: 2 },
+  { family: 'Learning', label: '학습 성향', total: 2 },
+  { family: 'Taste', label: '취향', total: 3 },
+];
+
+async function loadData(){
+  const { data: traits, error: tErr } = await db.from('traits').select('id, family');
+  if(tErr || !traits) return null;
+
+  const { data: history, error: hErr } = await db
+    .from('trait_score_history')
+    .select('trait_id')
+    .eq('user_id', USER_ID);
+  if(hErr) return null;
+
+  const answeredTraitIds = new Set((history || []).map(r => r.trait_id));
+  const familyByTraitId = {};
+  traits.forEach(t => { familyByTraitId[t.id] = t.family; });
+
+  const { data: responses, error: rErr } = await db
+    .from('responses')
+    .select('answered_at')
+    .eq('user_id', USER_ID)
+    .order('answered_at', { ascending: true });
+  if(rErr) return null;
+
+  return { traits, answeredTraitIds, familyByTraitId, responses: responses || [] };
+}
+
+function computeDailyCounts(responses){
+  const counts = {};
+  responses.forEach(r => {
+    const key = toLocalDateKey(new Date(r.answered_at));
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  return counts;
+}
+
+function computeStreak(dailyCounts){
+  let streak = 0;
+  const cursor = new Date();
+  // 오늘 아직 안 했으면 "오늘 시작 전" 상태로 보고, 어제부터 거슬러 센다
+  if(!dailyCounts[toLocalDateKey(cursor)]){
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  while(dailyCounts[toLocalDateKey(cursor)]){
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+function renderHeatmap(dailyCounts){
+  const days = [];
+  const today = new Date();
+  for(let i = 83; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = toLocalDateKey(d);
+    days.push({ key, count: dailyCounts[key] || 0 });
+  }
+  const cells = days.map(d => {
+    let bucket = 0;
+    if(d.count >= 8) bucket = 4;
+    else if(d.count >= 5) bucket = 3;
+    else if(d.count >= 2) bucket = 2;
+    else if(d.count >= 1) bucket = 1;
+    return `<div class="heatCell" style="opacity:${bucket === 0 ? 0.5 : 1}; background:${bucket === 0 ? 'var(--bg)' : heatColor(bucket)}" title="${d.key}: ${d.count}개"></div>`;
+  }).join('');
+  return `<div class="heatmapGrid">${cells}</div>
+    <div class="heatLegend">적음 ${[1,2,3,4].map(b=>`<div class="heatCell" style="background:${heatColor(b)}"></div>`).join('')} 많음</div>`;
+}
+
+function heatColor(bucket){
+  const colors = ['', '#f6d9c8', '#efb28a', '#e77f5e', '#e1566b'];
+  return colors[bucket];
+}
+
+function renderChapters(answeredTraitIds, familyByTraitId){
+  const familyAnsweredCount = {};
+  Object.entries(familyByTraitId).forEach(([traitId, family]) => {
+    if(answeredTraitIds.has(Number(traitId))){
+      familyAnsweredCount[family] = (familyAnsweredCount[family] || 0) + 1;
+    }
+  });
+
+  return CHAPTERS.map(ch => {
+    const have = familyAnsweredCount[ch.family] || 0;
+    const pct = Math.round((have / ch.total) * 100);
+    return `<div class="chapterRow">
+      <div class="top"><span class="name">${ch.label}</span><span class="frac">${have}/${ch.total}</span></div>
+      <div class="chapterTrack"><div class="chapterFill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderGoalSection(todayCount, goal){
+  const pct = Math.min(100, Math.round((todayCount / goal) * 100));
+  return `
+    <div class="goalRing">
+      <div>
+        <div class="goalText">오늘 <b>${todayCount}</b> / ${goal}문항 (${pct}%)</div>
+        <div class="chapterTrack" style="width:180px; margin-top:8px;"><div class="chapterFill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="goalEditRow">
+      <input type="number" id="goalInput" min="1" max="100" value="${goal}">
+      <button id="goalSaveBtn">목표 저장</button>
+    </div>
+  `;
+}
+
+async function render(){
+  const data = await loadData();
+  if(!data){
+    document.getElementById('content').innerHTML = '<div class="loading">데이터를 불러오지 못했어요.</div>';
+    return;
+  }
+
+  const dailyCounts = computeDailyCounts(data.responses);
+  const streak = computeStreak(dailyCounts);
+  const todayCount = dailyCounts[toLocalDateKey(new Date())] || 0;
+  const goal = getDailyGoal();
+
+  document.getElementById('subheader').textContent = `총 ${data.responses.length}개 응답`;
+
+  let html = '';
+
+  html += `<div class="card">
+    <h2>연속 출석</h2>
+    <div class="streakRow">
+      <div class="streakFlame">${streak > 0 ? '🔥' : '💤'}</div>
+      <div>
+        <div class="streakNum">${streak}일째</div>
+        <div class="streakLabel">${streak > 0 ? '오늘도 이어가볼까요?' : '오늘 답하고 스트릭을 시작해보세요'}</div>
+      </div>
+    </div>
+  </div>`;
+
+  html += `<div class="card"><h2>오늘의 목표</h2>${renderGoalSection(todayCount, goal)}</div>`;
+
+  html += `<div class="card"><h2>최근 12주</h2>${renderHeatmap(dailyCounts)}</div>`;
+
+  html += `<div class="card"><h2>챕터별 진행률</h2>${renderChapters(data.answeredTraitIds, data.familyByTraitId)}</div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('goalSaveBtn').addEventListener('click', () => {
+    const val = Math.max(1, Math.min(100, Number(document.getElementById('goalInput').value) || 5));
+    setDailyGoal(val);
+    render();
+  });
+}
+
+render();
+</script>
+</body>
+</html>
