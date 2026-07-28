@@ -1,0 +1,146 @@
+
+--- 문항 37 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '누가 나한테 선물 줄 때 필요한 거 위시리스트로 보내줌'}, {'key': 'b', 'text': '뭐든 마음이 담겼으면 다 좋음'}]
+  링크: option=b, weight=0.30
+
+--- 문항 71 (four_choice) ---
+질문: 친구한테 생일 선물할 때 나는?
+옵션: [{'key': 'a', 'text': '필요한 거 물어보고 딱 그거 삼'}, {'key': 'b', 'text': '실용적인 걸로 무난하게 고름'}, {'key': 'c', 'text': '취향 반영해서 특이한 거 찾아봄'}, {'key': 'd', 'text': '직접 만든 거나 꾸민 걸 줌'}]
+  링크: option=d, weight=0.40
+
+--- 문항 149 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '좋아하는 마음은 자주 말로 표현해야 한다'}, {'key': 'b', 'text': '말보다 행동으로 보여주는 게 더 진심이다'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+
+--- 문항 150 (object_choice) ---
+질문: 친한 친구 생일에 내가 가장 하고 싶은 건?
+옵션: [{'key': 'a', 'text': '긴 손편지 써주기'}, {'key': 'b', 'text': '둘이 하루 종일 같이 보내기'}, {'key': 'c', 'text': '꼭 필요한 거 챙겨서 선물하기'}, {'key': 'd', 'text': '깜짝 파티 열어주기'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+  링크: option=c, weight=0.90
+  링크: option=d, weight=0.90
+
+--- 문항 151 (four_choice) ---
+질문: 좋아하는 사람한테 마음을 전할 때 나는?
+옵션: [{'key': 'a', 'text': '"나 너 좋아해" 바로 말함'}, {'key': 'b', 'text': '자주 연락하며 슬쩍 표현함'}, {'key': 'c', 'text': '뭔가 사주거나 챙겨주는 걸로 대신함'}, {'key': 'd', 'text': '그냥 곁에 있어 주는 게 전부임'}]
+  링크: option=a, weight=1.00
+  링크: option=b, weight=0.50
+  링크: option=c, weight=0.50
+  링크: option=d, weight=1.00
+
+--- 문항 152 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '힘들 때 친구가 "많이 힘들었겠다" 공감해 주는 게 더 위로됨'}, {'key': 'b', 'text': '힘들 때 친구가 아무 말 없이 옆에 있어 주는 게 더 위로됨'}]
+  링크: option=a, weight=0.85
+  링크: option=b, weight=0.85
+
+--- 문항 153 (object_choice) ---
+질문: 누군가 나를 아끼고 있다는 걸 가장 실감하는 순간은?
+옵션: [{'key': 'a', 'text': '"오늘 괜찮아?" 먼저 연락이 왔을 때'}, {'key': 'b', 'text': '내가 좋아하는 거 기억하고 챙겨줄 때'}, {'key': 'c', 'text': '바쁜데도 시간 내서 같이 있어줄 때'}, {'key': 'd', 'text': '생각지도 못한 선물을 줄 때'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+  링크: option=c, weight=0.90
+  링크: option=d, weight=0.90
+
+--- 문항 154 (four_choice) ---
+질문: 친구가 서운하게 했을 때 나는 보통?
+옵션: [{'key': 'a', 'text': '그 자리에서 바로 "나 그거 서운했어" 함'}, {'key': 'b', 'text': '나중에 적당한 타이밍에 조심스럽게 꺼냄'}, {'key': 'c', 'text': '직접 말은 못 하고 행동으로 티를 냄'}, {'key': 'd', 'text': '그냥 혼자 삭히고 넘어감'}]
+  링크: option=a, weight=0.70
+  링크: option=b, weight=0.40
+  링크: option=c, weight=0.40
+  링크: option=d, weight=0.70
+
+--- 문항 155 (metaphor) ---
+질문: 내가 애정을 표현하는 방식을 음식에 비유하면?
+옵션: [{'key': 'a', 'text': '짜장면 🍜 (자주, 익숙하게, 늘 곁에 있는 느낌)'}, {'key': 'b', 'text': '깜짝 케이크 🎂 (평소엔 몰라도 특별한 날 확 터짐)'}, {'key': 'c', 'text': '집밥 🍚 (말없이 차려주는 것으로 다 표현)'}, {'key': 'd', 'text': '디저트 🍰 (달콤한 말과 리액션으로 표현)'}]
+  링크: option=a, weight=0.80
+  링크: option=b, weight=0.80
+  링크: option=c, weight=0.90
+  링크: option=d, weight=0.90
+
+--- 문항 156 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '좋은 카페 같이 가서 몇 시간 수다 떠는 게 최고의 시간'}, {'key': 'b', 'text': '아무것도 안 해도 그냥 같은 공간에 있는 게 제일 편함'}]
+  링크: option=a, weight=0.85
+  링크: option=b, weight=0.85
+
+--- 문항 157 (object_choice) ---
+질문: 오랜만에 만난 친구한테 반가움을 표현할 때 나는?
+옵션: [{'key': 'a', 'text': '"보고 싶었어!" 큰 소리로 외침'}, {'key': 'b', 'text': '그냥 안아버림'}, {'key': 'c', 'text': '"왜 이렇게 오랜만이야" 하며 툭툭 침'}, {'key': 'd', 'text': '좋아하는 거 사 가서 건넴'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+  링크: option=c, weight=0.70
+  링크: option=d, weight=0.90
+
+--- 문항 158 (four_choice) ---
+질문: 상대방이 나한테 얼마나 자주 연락해 줬으면 하는 편이야?
+옵션: [{'key': 'a', 'text': '하루에도 몇 번씩 안부 주고받고 싶음'}, {'key': 'b', 'text': '하루에 한 번 정도는 연락이 오면 좋음'}, {'key': 'c', 'text': '생각날 때 가끔 연락해도 충분함'}, {'key': 'd', 'text': '굳이 연락 안 해도 서로 믿으면 됨'}]
+  링크: option=a, weight=1.00
+  링크: option=b, weight=0.40
+  링크: option=c, weight=0.40
+  링크: option=d, weight=1.00
+
+--- 문항 271 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '친구가 힘들어 보이면 말 걸기 전에 먼저 꼭 안아줌'}, {'key': 'b', 'text': '친구가 힘들어 보이면 조용히 옆에 앉아서 같이 있어줌'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+
+--- 문항 272 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': "오래된 친구에게 '야, 역시 너밖에 없다'고 말로 확인시켜 줌"}, {'key': 'b', 'text': '말은 없어도 슬쩍 커피 사다 놓거나 필요한 거 먼저 챙겨줌'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+
+--- 문항 273 (object_choice) ---
+질문: 소중한 사람이 나한테 어떻게 해줄 때 가장 마음이 충전되는 것 같아?
+옵션: [{'key': 'a', 'text': '"너 덕분에 힘났어" 같은 말 한마디'}, {'key': 'b', 'text': '아무 말 없이 옆에 같이 있어주는 것'}, {'key': 'c', 'text': '내가 필요할 것 같은 걸 먼저 해주는 것'}, {'key': 'd', 'text': '뭔가 작은 거라도 골라서 건네주는 것'}]
+  링크: option=a, weight=1.00
+  링크: option=b, weight=1.00
+  링크: option=c, weight=1.00
+  링크: option=d, weight=1.00
+
+--- 문항 343 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '힘들었던 날, 친구가 말없이 옆에 있어줬으면'}, {'key': 'b', 'text': '힘들었던 날, 친구가 따뜻한 말 한마디 해줬으면'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+
+--- 문항 344 (object_choice) ---
+질문: 친한 친구 생일, 뭘 해주고 싶어?
+옵션: [{'key': 'a', 'text': '직접 쓴 손편지 + 작은 선물'}, {'key': 'b', 'text': '같이 맛있는 거 먹으러 가기'}, {'key': 'c', 'text': '평소에 필요하다던 거 딱 사다 주기'}, {'key': 'd', 'text': '깜짝 파티 몰래 준비하기'}]
+  링크: option=a, weight=0.85
+  링크: option=b, weight=0.85
+  링크: option=c, weight=0.85
+  링크: option=d, weight=0.85
+
+--- 문항 345 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '같이 있는 시간 자체가 최고의 선물'}, {'key': 'b', 'text': '정성 들인 선물 하나가 더 기억에 남음'}]
+  링크: option=a, weight=0.95
+  링크: option=b, weight=0.95
+
+--- 문항 415 (ab_dual) ---
+질문: None
+옵션: [{'key': 'a', 'text': '"보고 싶었어" 한마디가 선물보다 더 좋음'}, {'key': 'b', 'text': '말보다 딱 필요한 걸 챙겨주는 게 더 감동임'}]
+  링크: option=a, weight=0.90
+  링크: option=b, weight=0.90
+
+--- 문항 416 (four_choice) ---
+질문: 소중한 사람 생일에 나는 보통?
+옵션: [{'key': 'a', 'text': '직접 쓴 편지나 카드를 꼭 챙김'}, {'key': 'b', 'text': '같이 보내는 시간을 특별하게 만들려고 함'}, {'key': 'c', 'text': '딱 필요한 거 골라서 선물함'}, {'key': 'd', 'text': '깜짝 이벤트나 서프라이즈를 준비함'}]
+  링크: option=a, weight=1.00
+  링크: option=b, weight=0.40
+  링크: option=c, weight=0.40
+  링크: option=d, weight=1.00
+
+--- 문항 417 (four_choice) ---
+질문: 오늘 하루 고생했다고 느낄 때, 가장 힘이 되는 건?
+옵션: [{'key': 'a', 'text': '"정말 수고했어" 진심 어린 말 한마디'}, {'key': 'b', 'text': '어깨 토닥여주거나 안아주는 것'}, {'key': 'c', 'text': '좋아하는 간식이나 커피 사다 주는 것'}, {'key': 'd', 'text': '아무것도 안 해도 그냥 옆에 있어주는 것'}]
+  링크: option=a, weight=1.00
+  링크: option=b, weight=0.40
+  링크: option=c, weight=0.40
+  링크: option=d, weight=1.00

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>tammi 결과</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #eeeaf6;
+    --ink: #241c35;
+    --plum: #4b3869;
+    --mustard: #e2963c;
+    --coral: #e1566b;
+    --muted: #8b84a0;
+    --card: #ffffff;
+    --taste-card: #f4efe3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background: var(--bg); color: var(--ink);
+    font-family:'Noto Sans KR', sans-serif; padding: 28px 16px 60px;
+    display:flex; justify-content:center;
+  }
+  .wrap{ width:100%; max-width: 440px; }
+  header{ text-align:center; margin-bottom: 20px; }
+  header h1{
+    font-family:'Space Grotesk','Noto Sans KR', sans-serif; font-weight:700;
+    font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em;
+  }
+  header p{ margin:0; font-size: 13px; color: var(--muted); }
+
+  .blobWrap{ display:flex; flex-direction:column; align-items:center; gap:8px; margin: 20px 0 28px; }
+
+  .card{
+    background: var(--card); border-radius: 16px; padding: 18px 20px;
+    margin-bottom: 14px; box-shadow: 0 4px 16px rgba(36,28,53,0.06);
+  }
+  .card.taste{ background: var(--taste-card); }
+  .card h2{ font-size: 14px; font-weight:700; margin: 0 0 4px; }
+  .card .sub{ font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+
+  .barRow{ display:flex; align-items:center; gap:10px; margin-bottom: 9px; }
+  .barRow .label{ width: 92px; font-size: 12px; color: var(--plum); flex-shrink:0; }
+  .barRow .track{ flex:1; height: 8px; background: var(--bg); border-radius: 4px; overflow:hidden; }
+  .barRow .fill{ height:100%; background: linear-gradient(90deg, var(--coral), var(--mustard)); }
+  .barRow .val{ width: 56px; font-size: 11px; text-align:right; color: var(--muted); white-space: nowrap; }
+  .barRow .val.lowconf{ color: var(--coral); }
+
+  .deltaRow{ display:flex; gap:6px; align-items:center; margin: -4px 0 12px 102px; font-size: 10px; }
+  .deltaLabel{ color: var(--muted); }
+  .deltaUp{ color: #2e9e5b; font-weight:600; }
+  .deltaDown{ color: var(--coral); font-weight:600; }
+  .deltaFlat{ color: var(--muted); }
+  .deltaNone{ color: var(--muted); opacity:0.5; }
+
+  .gaugeLabel{ font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .gaugeTrack{ position:relative; height: 6px; background: var(--bg); border-radius: 3px; margin-bottom: 12px; }
+  .gaugeDot{ position:absolute; top:-3px; width: 12px; height: 12px; border-radius:50%; background: var(--plum); transform: translateX(-50%); }
+
+  .tasteTags{ display:flex; gap:8px; flex-wrap:wrap; }
+  .tasteTag{ background: var(--card); border-radius: 10px; padding: 5px 10px; font-size: 12px; }
+
+  .loading, .empty{ text-align:center; color: var(--muted); font-size: 13px; padding: 40px 0; }
+
+  .card.locked{ position: relative; overflow: hidden; }
+  .card.locked .lockedInner{ filter: blur(5px); opacity: 0.5; pointer-events: none; }
+  .lockOverlay{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px;
+    background: rgba(255,255,255,0.35);
+  }
+  .lockOverlay .lockIcon{ font-size: 20px; }
+  .lockOverlay .lockText{ font-size: 12px; color: var(--plum); font-weight:500; background:var(--card); padding:4px 10px; border-radius:8px; }
+
+  .layerLocked{ filter: blur(7px); opacity: 0.25; }
+
+  .blobWrap{ position: relative; }
+  .blobLockOverlay{
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  }
+  .blobLockOverlay .lockIcon{ font-size: 20px; }
+  .blobLockOverlay .lockText{ font-size: 12px; color: var(--plum); font-weight:500; background:var(--card); padding:4px 10px; border-radius:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>나의 탐미 리포트</h1>
+    <p id="subheader">데이터 불러오는 중...</p>
+  </header>
+
+  <div class="blobWrap">
+    <svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="3레이어 블롭 결과 이미지">
+      <defs>
+        <linearGradient id="gL1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E1566B"/><stop offset="100%" stop-color="#E2963C"/></linearGradient>
+        <linearGradient id="gL2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4B3869"/><stop offset="100%" stop-color="#7B5FE0"/></linearGradient>
+        <linearGradient id="gL3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3FB6E8"/><stop offset="100%" stop-color="#3FE0C8"/></linearGradient>
+      </defs>
+      <path id="pSurface" fill="url(#gL1)" opacity="0.75" style="mix-blend-mode: multiply;"/>
+      <path id="pMiddle" fill="url(#gL2)" opacity="0.7" style="mix-blend-mode: multiply;"/>
+      <path id="pDeep" fill="url(#gL3)" opacity="0.55" style="mix-blend-mode: multiply;"/>
+    </svg>
+    <div id="blobLockOverlay" class="blobLockOverlay" style="display:none;">
+      <div class="lockIcon">🔒</div>
+      <div class="lockText" id="blobLockText">질문에 더 답하면 나만의 형태가 보여요</div>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="loading">불러오는 중...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/prototypes/lib/blobRenderer.js"></script>
+<script>
+// ---- Supabase 연결 설정 (card_deck.html과 동일) ----
+const SUPABASE_URL = 'https://dmrokelruhncgewmshay.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_r00_v7TZXpQfBcwqf48N4g_LcnxU8NY';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function getUserId(){
+  let id = localStorage.getItem('tammi_anon_user_id');
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem('tammi_anon_user_id', id);
+  }
+  return id;
+}
+const USER_ID = getUserId();
+
+const DEFAULT_SCORE_BIPOLAR = 50;
+const DEFAULT_SCORE_INDEPENDENT = 0;
+const DEFAULT_CONF = 0;
+
+// progressive unlock 기준: 해당 섹션에 필요한 트레잇 중 몇 개 이상 응답해야 열리는지
+const UNLOCK_THRESHOLDS = {
+  surface: 2,   // Big Five 5개 중 2개
+  middle: 2,    // RIASEC/decision/risk/conflict 5개 중 2개
+  deep: 2,      // locus/love/time/spending/learning 5개 중 2개
+  taste: 1,     // taste 3개 중 1개
+};
+
+async function loadTraitData(){
+  const { data: traits, error: tErr } = await db
+    .from('traits')
+    .select('id, key, family, type, name, pole_left_label, pole_right_label');
+  if(tErr || !traits){
+    console.error('traits 조회 실패', tErr);
+    return null;
+  }
+
+  const { data: history, error: hErr } = await db
+    .from('trait_score_history')
+    .select('trait_id, score, confidence, snapshot_date')
+    .eq('user_id', USER_ID)
+    .order('snapshot_date', { ascending: false });
+  if(hErr){
+    console.error('trait_score_history 조회 실패', hErr);
+    return null;
+  }
+
+  // trait_id별 가장 최신(snapshot_date desc라 첫 등장) 값만 취함
+  const latestByTraitId = {};
+  (history || []).forEach(row => {
+    if(!(row.trait_id in latestByTraitId)) latestByTraitId[row.trait_id] = row;
+  });
+
+  // trait_id별 전체 히스토리를 날짜 오름차순으로 정리 (델타/추이 계산용)
+  const historyByTraitId = {};
+  (history || []).forEach(row => {
+    if(!historyByTraitId[row.trait_id]) historyByTraitId[row.trait_id] = [];
+    historyByTraitId[row.trait_id].push({ date: row.snapshot_date, score: Number(row.score) });
+  });
+  Object.values(historyByTraitId).forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)));
+
+  const byKey = {};
+  traits.forEach(t => {
+    const row = latestByTraitId[t.id];
+    const defaultScore = t.type === 'independent' ? DEFAULT_SCORE_INDEPENDENT : DEFAULT_SCORE_BIPOLAR;
+    byKey[t.key] = {
+      family: t.family,
+      type: t.type,
+      name: t.name,
+      pole_left_label: t.pole_left_label,
+      pole_right_label: t.pole_right_label,
+      score: row ? Number(row.score) : defaultScore,
+      confidence: row ? Number(row.confidence) : DEFAULT_CONF,
+      answered: !!row,
+      history: historyByTraitId[t.id] || [],
+    };
+  });
+  return byKey;
+}
+
+/**
+ * history: [{date:'YYYY-MM-DD', score:Number}, ...] 날짜 오름차순
+ * 반환: { previous, week, month, year } 각각 {delta, refDate} 또는 데이터 부족 시 null
+ */
+function computeDeltas(history){
+  if(!history || history.length < 2) return { previous: null, week: null, month: null, year: null };
+
+  const latest = history[history.length - 1];
+  const latestDate = new Date(latest.date);
+
+  function findClosestBefore(cutoffDate){
+    let candidate = null;
+    for(let i = history.length - 2; i >= 0; i--){
+      if(new Date(history[i].date) <= cutoffDate){ candidate = history[i]; break; }
+    }
+    return candidate;
+  }
+
+  function deltaFrom(ref){
+    if(!ref) return null;
+    return { delta: Math.round(latest.score - ref.score), refDate: ref.date };
+  }
+
+  const weekCutoff = new Date(latestDate); weekCutoff.setDate(weekCutoff.getDate() - 7);
+  const monthCutoff = new Date(latestDate); monthCutoff.setDate(monthCutoff.getDate() - 30);
+  const yearCutoff = new Date(latestDate); yearCutoff.setDate(yearCutoff.getDate() - 365);
+
+  return {
+    previous: deltaFrom(history[history.length - 2]),   // 가장 최근 이전 기록 대비
+    week: deltaFrom(findClosestBefore(weekCutoff)),
+    month: deltaFrom(findClosestBefore(monthCutoff)),
+    year: deltaFrom(findClosestBefore(yearCutoff)),
+  };
+}
+
+function deltaBadge(delta){
+  if(delta === null) return '<span class="deltaNone">-</span>';
+  const sign = delta > 0 ? '+' : '';
+  const cls = delta > 0 ? 'deltaUp' : (delta < 0 ? 'deltaDown' : 'deltaFlat');
+  return `<span class="${cls}">${sign}${delta}</span>`;
+}
+
+function topTwo(byKey, keys){
+  const sorted = keys
+    .map(k => ({ key: k, score: byKey[k] ? byKey[k].score : 0 }))
+    .sort((a, b) => b.score - a.score);
+  return [sorted[0], sorted[1]];
+}
+
+function bar(label, traitData){
+  const { score: val, confidence, history } = traitData;
+  const lowConf = confidence < 0.3;
+  const d = computeDeltas(history);
+  return `<div class="barRow">
+    <div class="label">${label}</div>
+    <div class="track"><div class="fill" style="width:${Math.round(val)}%"></div></div>
+    <div class="val ${lowConf ? 'lowconf' : ''}">${Math.round(val)}${lowConf ? '·낮음' : ''}</div>
+  </div>
+  <div class="deltaRow">
+    <span class="deltaLabel">지난기록</span>${deltaBadge(d.previous ? d.previous.delta : null)}
+    <span class="deltaLabel">주간</span>${deltaBadge(d.week ? d.week.delta : null)}
+    <span class="deltaLabel">월간</span>${deltaBadge(d.month ? d.month.delta : null)}
+    <span class="deltaLabel">연간</span>${deltaBadge(d.year ? d.year.delta : null)}
+  </div>`;
+}
+
+function gauge(label, val){
+  return `<div class="gaugeLabel">${label}</div>
+    <div class="gaugeTrack"><div class="gaugeDot" style="left:${Math.round(val)}%"></div></div>`;
+}
+
+async function render(){
+  const byKey = await loadTraitData();
+  if(!byKey){
+    document.getElementById('content').innerHTML = '<div class="empty">데이터를 불러오지 못했어요. 콘솔을 확인해주세요.</div>';
+    return;
+  }
+
+  const answeredCount = Object.values(byKey).filter(t => t.answered).length;
+  document.getElementById('subheader').textContent = `${answeredCount}개 특성 응답 반영됨`;
+
+  // ---- 섹션별 unlock 판단 ----
+  const surfaceKeys = ['bigfive_openness','bigfive_conscientiousness','bigfive_extraversion','bigfive_agreeableness','bigfive_stability'];
+  const middleKeys = ['riasec_realistic','riasec_investigative','riasec_artistic','riasec_social','riasec_enterprising','riasec_conventional','decision_style','risk_taking','conflict_style'];
+  const deepKeys = ['locus_of_control','love_language_words','love_language_time','love_language_gifts','love_language_service','love_language_touch','time_perspective','spending_style','learning_motivation'];
+  const tasteKeys = ['taste_flavor','taste_dining','taste_travel_env'];
+
+  const countAnswered = (keys) => keys.filter(k => byKey[k] && byKey[k].answered).length;
+
+  const unlocked = {
+    surface: countAnswered(surfaceKeys) >= UNLOCK_THRESHOLDS.surface,
+    middle: countAnswered(middleKeys) >= UNLOCK_THRESHOLDS.middle,
+    deep: countAnswered(deepKeys) >= UNLOCK_THRESHOLDS.deep,
+    taste: countAnswered(tasteKeys) >= UNLOCK_THRESHOLDS.taste,
+  };
+
+  // ---- 블롭 3레이어 데이터 구성 ----
+  const riasecKeys = ['riasec_realistic','riasec_investigative','riasec_artistic','riasec_social','riasec_enterprising','riasec_conventional'];
+  const [riasecTop1, riasecTop2] = topTwo(byKey, riasecKeys);
+
+  const loveLangKeys = ['love_language_words','love_language_time','love_language_gifts','love_language_service','love_language_touch'];
+  const [loveLangTop] = topTwo(byKey, loveLangKeys);
+
+  const traitsForBlob = {
+    bigFive: {
+      openness: byKey.bigfive_openness.score,
+      conscientiousness: byKey.bigfive_conscientiousness.score,
+      extraversion: byKey.bigfive_extraversion.score,
+      agreeableness: byKey.bigfive_agreeableness.score,
+      stability: byKey.bigfive_stability.score,
+    },
+    middle: {
+      riasecTop1: riasecTop1.score,
+      riasecTop2: riasecTop2.score,
+      decisionStyle: byKey.decision_style.score,
+      riskTaking: byKey.risk_taking.score,
+      conflictStyle: byKey.conflict_style.score,
+    },
+    deep: {
+      locusOfControl: byKey.locus_of_control.score,
+      loveLanguageTop: loveLangTop.score,
+      timePerspective: byKey.time_perspective.score,
+      spendingStyle: byKey.spending_style.score,
+      learningMotivation: byKey.learning_motivation.score,
+    },
+  };
+
+  const layers = tammiBlobRenderer.generateBlobLayers(traitsForBlob);
+  const pSurface = document.getElementById('pSurface');
+  const pMiddle = document.getElementById('pMiddle');
+  const pDeep = document.getElementById('pDeep');
+  pSurface.setAttribute('d', layers.surface);
+  pMiddle.setAttribute('d', layers.middle);
+  pDeep.setAttribute('d', layers.deep);
+  pSurface.classList.toggle('layerLocked', !unlocked.surface);
+  pMiddle.classList.toggle('layerLocked', !unlocked.middle);
+  pDeep.classList.toggle('layerLocked', !unlocked.deep);
+
+  const blobLockOverlay = document.getElementById('blobLockOverlay');
+  if(!unlocked.surface){
+    const remain = Math.max(0, UNLOCK_THRESHOLDS.surface - countAnswered(surfaceKeys));
+    document.getElementById('blobLockText').textContent = `${remain}개 더 답하면 나만의 형태가 보여요`;
+    blobLockOverlay.style.display = 'flex';
+  } else {
+    blobLockOverlay.style.display = 'none';
+  }
+
+  // ---- 잠금 카드 래핑 헬퍼 ----
+  function lockableCard(title, sub, innerHtml, isUnlocked, needCount, haveCount, extraClass){
+    const cls = `card ${extraClass || ''} ${isUnlocked ? '' : 'locked'}`.trim();
+    const overlay = isUnlocked ? '' : `<div class="lockOverlay">
+        <div class="lockIcon">🔒</div>
+        <div class="lockText">${Math.max(0, needCount - haveCount)}개 더 답하면 열려요</div>
+      </div>`;
+    return `<div class="${cls}">
+      <div class="lockedInner">
+        <h2>${title}</h2><div class="sub">${sub}</div>
+        ${innerHtml}
+      </div>
+      ${overlay}
+    </div>`;
+  }
+
+  // ---- 상세 그래프 ----
+  let html = '';
+
+  let bigFiveInner = '';
+  bigFiveInner += bar('개방성', byKey.bigfive_openness);
+  bigFiveInner += bar('성실성', byKey.bigfive_conscientiousness);
+  bigFiveInner += bar('외향성', byKey.bigfive_extraversion);
+  bigFiveInner += bar('친화성', byKey.bigfive_agreeableness);
+  bigFiveInner += bar('정서안정성', byKey.bigfive_stability);
+  html += lockableCard('성향 분석 (Big Five)', '응답이 쌓일수록 정확해져요', bigFiveInner,
+    unlocked.surface, UNLOCK_THRESHOLDS.surface, countAnswered(surfaceKeys));
+
+  let riasecInner = '';
+  riasecInner += bar('현실형 R', byKey.riasec_realistic);
+  riasecInner += bar('탐구형 I', byKey.riasec_investigative);
+  riasecInner += bar('예술형 A', byKey.riasec_artistic);
+  riasecInner += bar('사회형 S', byKey.riasec_social);
+  riasecInner += bar('진취형 E', byKey.riasec_enterprising);
+  riasecInner += bar('관습형 C', byKey.riasec_conventional);
+  html += lockableCard('관심 유형 (RIASEC)', '가족 내 상대 비중(%) 기준', riasecInner,
+    unlocked.middle, UNLOCK_THRESHOLDS.middle, countAnswered(middleKeys));
+
+  let gaugeInner = '';
+  gaugeInner += gauge(`${byKey.conflict_style.pole_right_label} ← 갈등 대응 → ${byKey.conflict_style.pole_left_label}`, byKey.conflict_style.score);
+  gaugeInner += gauge(`${byKey.time_perspective.pole_left_label} ← 시간관 → ${byKey.time_perspective.pole_right_label}`, byKey.time_perspective.score);
+  gaugeInner += gauge(`${byKey.spending_style.pole_left_label} ← 소비 성향 → ${byKey.spending_style.pole_right_label}`, byKey.spending_style.score);
+  gaugeInner += gauge(`${byKey.decision_style.pole_left_label} ← 의사결정 → ${byKey.decision_style.pole_right_label}`, byKey.decision_style.score);
+  gaugeInner += gauge(`${byKey.risk_taking.pole_left_label} ← 위험 감수 → ${byKey.risk_taking.pole_right_label}`, byKey.risk_taking.score);
+  html += lockableCard('행동 패턴', '갈등/시간관/소비/의사결정/위험감수', gaugeInner,
+    unlocked.middle && unlocked.deep, UNLOCK_THRESHOLDS.middle, Math.min(countAnswered(middleKeys), countAnswered(deepKeys)));
+
+  let tasteInner = '<div class="tasteTags">';
+  tasteInner += `<span class="tasteTag">${byKey.taste_flavor.score >= 50 ? byKey.taste_flavor.pole_right_label : byKey.taste_flavor.pole_left_label}</span>`;
+  tasteInner += `<span class="tasteTag">${byKey.taste_dining.score >= 50 ? byKey.taste_dining.pole_right_label : byKey.taste_dining.pole_left_label}</span>`;
+  tasteInner += `<span class="tasteTag">${byKey.taste_travel_env.score >= 50 ? byKey.taste_travel_env.pole_right_label : byKey.taste_travel_env.pole_left_label}</span>`;
+  tasteInner += '</div>';
+  html += lockableCard('취향 리포트', '심리 프레임워크 기반 아님, 추천용 취향 데이터', tasteInner,
+    unlocked.taste, UNLOCK_THRESHOLDS.taste, countAnswered(tasteKeys), 'taste');
+
+  document.getElementById('content').innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>

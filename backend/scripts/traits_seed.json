@@ -18,7 +18,11 @@
 
   {"key":"conflict_style","family":"Relationship","type":"bipolar","name":"갈등대응스타일","pole_left":"direct","pole_right":"avoidant","pole_left_label":"직면형","pole_right_label":"회피형"},
   {"key":"communication_tone","family":"Relationship","type":"bipolar","name":"커뮤니케이션톤","pole_left":"blunt","pole_right":"tactful","pole_left_label":"직설적","pole_right_label":"완곡한"},
-  {"key":"love_language","family":"Relationship","type":"independent","name":"애정표현방식"},
+  {"key":"love_language_words","family":"Relationship","type":"independent","name":"애정표현_인정하는말"},
+  {"key":"love_language_time","family":"Relationship","type":"independent","name":"애정표현_함께하는시간"},
+  {"key":"love_language_gifts","family":"Relationship","type":"independent","name":"애정표현_선물"},
+  {"key":"love_language_service","family":"Relationship","type":"independent","name":"애정표현_봉사"},
+  {"key":"love_language_touch","family":"Relationship","type":"independent","name":"애정표현_스킨십"},
 
   {"key":"time_perspective","family":"Lifestyle","type":"bipolar","name":"시간관","pole_left":"past","pole_right":"future","pole_left_label":"과거지향","pole_right_label":"미래지향"},
   {"key":"spending_style","family":"Lifestyle","type":"bipolar","name":"소비성향","pole_left":"planned","pole_right":"impulsive","pole_left_label":"계획소비","pole_right_label":"충동소비"},

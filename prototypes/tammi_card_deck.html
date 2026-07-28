@@ -307,36 +307,6 @@
     color: var(--coral);
     padding-top: 6px;
   }
-
-  .starmap-card{
-    background: #161029;
-    border-radius: 16px;
-    padding: 18px 10px 8px;
-    margin-bottom: 18px;
-    position: relative;
-    overflow: hidden;
-  }
-  .starmap-title{
-    text-align:center;
-    font-family:'Space Grotesk', sans-serif;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #a89be0;
-    margin-bottom: 4px;
-  }
-  .starmap-empty{
-    text-align:center;
-    font-size: 12.5px;
-    color: #8078a8;
-    padding: 30px 10px 34px;
-  }
-  .starmap-report{
-    font-size: 12.5px;
-    color: #c9bdf0;
-    line-height: 1.7;
-    padding: 4px 14px 16px;
-  }
 </style>
 </head>
 <body>
@@ -363,42 +333,7 @@
 
   <div class="skip-row"><button id="skipBtn">패스하고 다음 카드</button></div>
 
-  <button class="profile-toggle" id="profileToggle">내 프로필 보기 ▾</button>
-  <div class="profile-panel" id="profilePanel">
-    <div id="profileEmpty" class="profile-empty">아직 데이터가 부족해요. 몇 번 더 선택해보세요.</div>
-    <div class="starmap-card">
-      <div class="starmap-title" id="starmapTitle">내 성단</div>
-      <div id="starmapWrap"></div>
-      <div class="starmap-report" id="starmapReport"></div>
-    </div>
-    <div id="axesWrap"></div>
-    <div class="badge-line" id="badgeLine"></div>
-  </div>
-
-  <button class="compare-toggle" id="compareToggle">친구와 비교하기 ▾</button>
-  <div class="compare-panel" id="comparePanel">
-    <div class="compare-note">비교 코드는 이 앱을 쓰는 누구나 코드를 알면 볼 수 있어요. 믿을 수 있는 친구에게만 공유해주세요.</div>
-
-    <div class="compare-section">
-      <h4>내 코드 공유하기</h4>
-      <button class="compare-toggle" id="genCodeBtn" style="margin:0;color:var(--plum);">코드 만들기</button>
-      <div class="my-code-box" id="myCodeBox" style="display:none;">
-        <span id="myCodeText">----</span>
-        <button id="copyCodeBtn">복사</button>
-      </div>
-    </div>
-
-    <div class="compare-section">
-      <h4>친구 코드로 비교하기</h4>
-      <div class="code-row">
-        <input id="friendCodeInput" placeholder="친구 코드 입력" maxlength="6">
-        <button id="compareBtn">비교</button>
-      </div>
-      <div class="compare-msg" id="compareMsg"></div>
-    </div>
-
-    <div id="compareResult"></div>
-  </div>
+  <a class="profile-toggle" id="resultLink" href="/result" style="display:block; text-align:center; text-decoration:none;">내 결과 보기 →</a>
 
 </div>
 
@@ -426,22 +361,6 @@ const BIGFIVE_AXIS_MAP = {
   bigfive_agreeableness: 'mind',
   bigfive_stability: 'mood',
 };
-
-// 성단 해석문에 쓰는, 각 극(pole)의 자연스러운 서술형 문구
-// (interpretation_reference.md의 카피 톤을 그대로 가져옴)
-const POLE_PHRASES = {
-  stable: '익숙한 것에서 안정감을 느끼는 편이에요',
-  adventure: '새로운 경험과 변화에 끌리는 편이에요',
-  planner: '미리 계획하고 체계적으로 움직이는 편이에요',
-  spontaneous: '그때그때 상황에 맞춰 유연하게 움직이는 편이에요',
-  relationship: '사람들과 함께할 때 에너지를 얻는 편이에요',
-  independence: '혼자만의 시간에서 에너지를 회복하는 편이에요',
-  logic: '상황을 논리와 사실 위주로 판단하는 편이에요',
-  emotion: '상황을 감정과 분위기 위주로 판단하는 편이에요',
-  steady: '예상 밖의 일이 생겨도 비교적 담담하게 넘기는 편이에요',
-  reactive: '상황에 따라 감정이 크게 오르내리는 편이에요',
-};
-const REPORT_CONNECTORS = ['', '그리고 ', '다만 ', '그런가 하면 ', '마지막으로 '];
 
 const FALLBACK_PAIRS = [
   {axis:'stability', top:{pole:'stable', text:'평생 한 동네에서 살기'}, bottom:{pole:'adventure', text:'매년 새로운 도시로 이사하기'}},
@@ -552,116 +471,6 @@ const AXES = [
   {key:'mood', left:'steady', right:'reactive', leftLabel:'차분형', rightLabel:'예민형'}
 ];
 
-const STAR_POLES = [
-  {pole:'stable', opp:'adventure', label:'안정'},
-  {pole:'planner', opp:'spontaneous', label:'계획'},
-  {pole:'logic', opp:'emotion', label:'이성'},
-  {pole:'relationship', opp:'independence', label:'관계'},
-  {pole:'steady', opp:'reactive', label:'차분'},
-  {pole:'adventure', opp:'stable', label:'모험'},
-  {pole:'spontaneous', opp:'planner', label:'즉흥'},
-  {pole:'emotion', opp:'logic', label:'감성'},
-  {pole:'independence', opp:'relationship', label:'독립'},
-  {pole:'reactive', opp:'steady', label:'예민'}
-];
-const BG_STARS = [
-  [20,30,1.2,0.3],[60,15,0.8,0.4],[280,25,1,0.25],[300,60,0.7,0.3],
-  [15,150,0.9,0.35],[300,140,1.1,0.25],[30,290,0.8,0.3],[290,280,1,0.35],
-  [150,20,0.7,0.3],[150,300,0.9,0.25],[100,290,0.6,0.3],[220,300,0.8,0.25],
-  [10,220,0.7,0.3],[310,210,0.9,0.3],[60,270,0.6,0.25],[250,50,0.8,0.3]
-];
-
-// 축별로 얼마나 답이 쌓였는지(신뢰도)와, 어느 쪽으로 기울었는지(강도)를 계산
-function computeAxisStats(){
-  return AXES.map(a=>{
-    const l = tallies[a.left]||0, r = tallies[a.right]||0;
-    const sum = l + r;
-    const pctL = sum ? l/sum : 0.5;
-    const dominantLabel = pctL >= 0.5 ? a.leftLabel : a.rightLabel;
-    const dominantPole = pctL >= 0.5 ? a.left : a.right;
-    return { ...a, sum, pctL, dominantLabel, dominantPole, strength: Math.abs(pctL-0.5) };
-  });
-}
-
-// 신뢰도 있는(답이 충분히 쌓인) 축들을 강도 순으로 정렬해서, 별자리 제목 + 해석 문단을 만든다
-function buildConstellationReport(){
-  const CONFIDENCE_MIN = 2; // 이 축은 최소 2번은 답해야 "안다"고 침
-  const qualified = computeAxisStats()
-    .filter(a => a.sum >= CONFIDENCE_MIN)
-    .sort((a,b) => b.strength - a.strength);
-
-  if(qualified.length === 0){
-    return { title: '내 성단', paragraph: '' };
-  }
-
-  const titleParts = qualified.slice(0,2).map(a=>a.dominantLabel);
-  const title = titleParts.join('·') + ' 별자리';
-
-  const paragraph = qualified
-    .map((a,i) => REPORT_CONNECTORS[Math.min(i, REPORT_CONNECTORS.length-1)] + POLE_PHRASES[a.dominantPole])
-    .join('. ') + '.';
-
-  return { title, paragraph };
-}
-
-function renderStarmap(){
-  const wrap = document.getElementById('starmapWrap');
-  const titleEl = document.getElementById('starmapTitle');
-  const reportEl = document.getElementById('starmapReport');
-
-  if(tallies.total < 4){
-    wrap.innerHTML = '<div class="starmap-empty">몇 번 더 선택하면 나만의 별자리가 나타나요</div>';
-    titleEl.textContent = '내 성단';
-    reportEl.textContent = '';
-    return;
-  }
-
-  const { title, paragraph } = buildConstellationReport();
-  titleEl.textContent = title;
-  reportEl.textContent = paragraph;
-
-  const cx=160, cy=160, minR=22, maxR=95, labelR=118;
-  const angleStep = 360 / STAR_POLES.length;
-  const bgStars = BG_STARS.map(([x,y,r,o])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${o}"/>`).join('');
-  const guides = [minR, (minR+maxR)/2, maxR].map(r=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#3a3160" stroke-width="0.6"/>`).join('');
-
-  const pts = STAR_POLES.map((p,i)=>{
-    const sum = (tallies[p.pole]||0) + (tallies[p.opp]||0);
-    const pct = sum ? (tallies[p.pole]||0)/sum : 0.5;
-    const r = minR + pct*(maxR-minR);
-    const angle = (i*angleStep - 90) * Math.PI/180;
-    const x = cx + r*Math.cos(angle);
-    const y = cy + r*Math.sin(angle);
-    const lx = cx + labelR*Math.cos(angle);
-    const ly = cy + labelR*Math.sin(angle);
-    // 그 축에 답을 많이 할수록(최대 8번 기준) 별이 더 밝고 커짐 -- "탐구가 쌓이는" 느낌
-    const confidence = Math.min(1, sum/8);
-    const glowR = 5 + 4*confidence;
-    const coreR = 2 + 2*confidence;
-    const glowOpacity = 0.08 + 0.25*confidence;
-    const coreOpacity = 0.35 + 0.65*confidence;
-    return {x,y,lx,ly,label:p.label, glowR, coreR, glowOpacity, coreOpacity};
-  });
-
-  const spokes = pts.map(p=>`<line x1="${cx}" y1="${cy}" x2="${p.lx*0.86+cx*0.14}" y2="${p.ly*0.86+cy*0.14}" stroke="#3a3160" stroke-width="0.5"/>`).join('');
-  const polygonPath = 'M' + pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L') + 'Z';
-  const stars = pts.map(p=>`
-    <circle cx="${p.x}" cy="${p.y}" r="${p.glowR}" fill="#e2b04a" opacity="${p.glowOpacity}"/>
-    <circle cx="${p.x}" cy="${p.y}" r="${p.coreR}" fill="#f5d998" opacity="${p.coreOpacity}"/>
-    <text x="${p.lx}" y="${p.ly}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#c9bdf0" font-family="'Noto Sans KR',sans-serif">${p.label}</text>
-  `).join('');
-
-  wrap.innerHTML = `
-    <svg width="100%" viewBox="0 0 320 320">
-      ${bgStars}
-      ${guides}
-      ${spokes}
-      <path d="${polygonPath}" fill="#e2b04a" fill-opacity="0.1" stroke="#e2b04a" stroke-width="1.2"/>
-      ${stars}
-    </svg>
-  `;
-}
-
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -686,11 +495,6 @@ const optBottom = document.getElementById('optBottom');
 const duel = document.getElementById('duel');
 const totalCount = document.getElementById('totalCount');
 const skipBtn = document.getElementById('skipBtn');
-const profileToggle = document.getElementById('profileToggle');
-const profilePanel = document.getElementById('profilePanel');
-const profileEmpty = document.getElementById('profileEmpty');
-const axesWrap = document.getElementById('axesWrap');
-const badgeLine = document.getElementById('badgeLine');
 
 function nextCard(){
   if(deckPtr >= deck.length){
@@ -730,36 +534,10 @@ async function saveTallies(){
   }catch(e){ console.error('save failed', e); }
 }
 
+// 상단 "총 N번 선택함" 카운터만 갱신. 별자리/축 그래프/친구비교는
+// tammi_result_blob.html(실제 DB 기반 결과화면)로 이동했음.
 function renderProfile(){
   totalCount.textContent = tallies.total;
-  renderStarmap();
-  if(tallies.total < 4){
-    profileEmpty.style.display = 'block';
-    axesWrap.innerHTML = '';
-    badgeLine.textContent = '';
-    return;
-  }
-  profileEmpty.style.display = 'none';
-  axesWrap.innerHTML = '';
-  const dominant = [];
-  AXES.forEach(a=>{
-    const l = tallies[a.left] || 0;
-    const r = tallies[a.right] || 0;
-    const sum = l + r;
-    const pctL = sum === 0 ? 50 : Math.round((l/sum)*100);
-    const pctR = 100 - pctL;
-    const div = document.createElement('div');
-    div.className = 'axis';
-    div.innerHTML = `
-      <div class="poles"><span>${a.leftLabel} ${sum? pctL+'%':''}</span><span>${a.rightLabel} ${sum? pctR+'%':''}</span></div>
-      <div class="bar"><div class="fillL" style="width:${pctL}%"></div><div class="fillR" style="width:${pctR}%"></div></div>
-    `;
-    axesWrap.appendChild(div);
-    if(sum>0){
-      dominant.push(pctL>=pctR ? a.leftLabel : a.rightLabel);
-    }
-  });
-  badgeLine.textContent = dominant.length ? dominant.join(' · ') : '';
 }
 
 function choose(pole, direction, questionId, optionKey){
@@ -789,119 +567,6 @@ skipBtn.addEventListener('click', ()=>{
   void duel.offsetWidth;
   duel.classList.add('enter');
 });
-
-profileToggle.addEventListener('click', ()=>{
-  const open = profilePanel.classList.toggle('open');
-  profileToggle.textContent = open ? '내 프로필 보기 ▴' : '내 프로필 보기 ▾';
-});
-
-// Compare with friend
-const compareToggle = document.getElementById('compareToggle');
-const comparePanel = document.getElementById('comparePanel');
-const genCodeBtn = document.getElementById('genCodeBtn');
-const myCodeBox = document.getElementById('myCodeBox');
-const myCodeText = document.getElementById('myCodeText');
-const copyCodeBtn = document.getElementById('copyCodeBtn');
-const friendCodeInput = document.getElementById('friendCodeInput');
-const compareBtn = document.getElementById('compareBtn');
-const compareMsg = document.getElementById('compareMsg');
-const compareResult = document.getElementById('compareResult');
-
-compareToggle.addEventListener('click', ()=>{
-  const open = comparePanel.classList.toggle('open');
-  compareToggle.textContent = open ? '친구와 비교하기 ▴' : '친구와 비교하기 ▾';
-});
-
-function genCode(){
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let c = '';
-  for(let i=0;i<4;i++) c += chars[Math.floor(Math.random()*chars.length)];
-  return c;
-}
-
-genCodeBtn.addEventListener('click', async ()=>{
-  if(tallies.total < 4){
-    compareMsg.textContent = '카드를 몇 장 더 답한 뒤에 공유해보세요.';
-    return;
-  }
-  const code = genCode();
-  genCodeBtn.textContent = '만드는 중…';
-  try{
-    const { error } = await db.from('shared_codes').upsert({ code, tallies });
-    if(!error){
-      myCodeText.textContent = code;
-      myCodeBox.style.display = 'flex';
-      genCodeBtn.style.display = 'none';
-    } else {
-      compareMsg.textContent = '코드 생성에 실패했어요. 다시 시도해주세요.';
-    }
-  }catch(e){
-    compareMsg.textContent = '코드 생성에 실패했어요. 다시 시도해주세요.';
-  }
-  genCodeBtn.textContent = '코드 만들기';
-});
-
-copyCodeBtn.addEventListener('click', ()=>{
-  navigator.clipboard.writeText(myCodeText.textContent).then(()=>{
-    copyCodeBtn.textContent = '복사됨';
-    setTimeout(()=>{ copyCodeBtn.textContent = '복사'; }, 1500);
-  }).catch(()=>{});
-});
-
-compareBtn.addEventListener('click', async ()=>{
-  const code = friendCodeInput.value.trim().toUpperCase();
-  compareResult.innerHTML = '';
-  if(!code){
-    compareMsg.textContent = '코드를 입력해주세요.';
-    return;
-  }
-  if(tallies.total < 4){
-    compareMsg.textContent = '내 카드도 몇 장 더 답해야 비교할 수 있어요.';
-    return;
-  }
-  compareMsg.textContent = '불러오는 중…';
-  try{
-    const { data, error } = await db.from('shared_codes').select('tallies').eq('code', code).maybeSingle();
-    if(error || !data){
-      compareMsg.textContent = '코드를 찾을 수 없어요. 다시 확인해주세요.';
-      return;
-    }
-    compareMsg.textContent = '';
-    renderComparison(data.tallies);
-  }catch(e){
-    compareMsg.textContent = '코드를 찾을 수 없어요. 다시 확인해주세요.';
-  }
-});
-
-function renderComparison(friendTallies){
-  let sameCount = 0;
-  let comparedAxes = 0;
-  const rows = AXES.map(a=>{
-    const myL = tallies[a.left]||0, myR = tallies[a.right]||0, mySum = myL+myR;
-    const frL = friendTallies[a.left]||0, frR = friendTallies[a.right]||0, frSum = frL+frR;
-    const myPctL = mySum? Math.round((myL/mySum)*100) : 50;
-    const frPctL = frSum? Math.round((frL/frSum)*100) : 50;
-    if(mySum>0 && frSum>0){
-      comparedAxes++;
-      const myDom = myPctL>=50 ? 'L' : 'R';
-      const frDom = frPctL>=50 ? 'L' : 'R';
-      if(myDom===frDom) sameCount++;
-    }
-    return `
-      <div class="cmp-axis">
-        <div class="cmp-poles"><span>${a.leftLabel}</span><span>${a.rightLabel}</span></div>
-        <div class="cmp-who">나</div>
-        <div class="cmp-bar"><div class="fL" style="width:${myPctL}%"></div><div class="fR" style="width:${100-myPctL}%"></div></div>
-        <div class="cmp-who">친구</div>
-        <div class="cmp-bar friend"><div class="fL" style="width:${frPctL}%"></div><div class="fR" style="width:${100-frPctL}%"></div></div>
-      </div>
-    `;
-  }).join('');
-  const resultLine = comparedAxes>0
-    ? `<div class="cmp-result">${comparedAxes}개 축 중 ${sameCount}개에서 비슷한 성향이에요</div>`
-    : '';
-  compareResult.innerHTML = rows + resultLine;
-}
 
 loadTallies();
 </script>

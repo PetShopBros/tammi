@@ -71,6 +71,7 @@ def compute_scores(responses, question_links_by_id, traits_by_id):
             "pct_right": 100 - pct_left,
             "left_label": trait["pole_left_label"],
             "right_label": trait["pole_right_label"],
+            "answered_weight": round(agg["weight_sum"], 2),
         }
 
     for trait_id, agg in independent_agg.items():
