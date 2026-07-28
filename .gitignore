@@ -4,3 +4,5 @@ backend/scripts/__pycache__/
 backend/scripts/question_bank.json
 backend/scripts/last_failed_response.txt
 *.pyc
+.vercel
+.env*

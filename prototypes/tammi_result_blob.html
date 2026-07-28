@@ -68,20 +68,22 @@
   .card.locked .lockedInner{ filter: blur(5px); opacity: 0.5; pointer-events: none; }
   .lockOverlay{
     position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:4px;
+    align-items:center; justify-content:center; gap:8px;
     background: rgba(255,255,255,0.35);
   }
-  .lockOverlay .lockIcon{ font-size: 20px; }
   .lockOverlay .lockText{ font-size: 12px; color: var(--plum); font-weight:500; background:var(--card); padding:4px 10px; border-radius:8px; }
+
+  .progressGauge{ display:flex; gap:5px; }
+  .progressGauge .dot{ width:9px; height:9px; border-radius:50%; background: var(--bg); border: 1.5px solid var(--muted); }
+  .progressGauge .dot.filled{ background: linear-gradient(135deg, var(--coral), var(--mustard)); border-color: transparent; }
 
   .layerLocked{ filter: blur(7px); opacity: 0.25; }
 
   .blobWrap{ position: relative; }
   .blobLockOverlay{
     position:absolute; top:0; left:0; right:0; bottom:0;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   }
-  .blobLockOverlay .lockIcon{ font-size: 20px; }
   .blobLockOverlay .lockText{ font-size: 12px; color: var(--plum); font-weight:500; background:var(--card); padding:4px 10px; border-radius:8px; }
 </style>
 </head>
@@ -104,8 +106,8 @@
       <path id="pDeep" fill="url(#gL3)" opacity="0.55" style="mix-blend-mode: multiply;"/>
     </svg>
     <div id="blobLockOverlay" class="blobLockOverlay" style="display:none;">
-      <div class="lockIcon">🔒</div>
-      <div class="lockText" id="blobLockText">질문에 더 답하면 나만의 형태가 보여요</div>
+      <div id="blobProgressGauge"></div>
+      <div class="lockText">조금만 더 답하면 나만의 형태가 보여요</div>
     </div>
   </div>
 
@@ -238,6 +240,14 @@ function deltaBadge(delta){
   return `<span class="${cls}">${sign}${delta}</span>`;
 }
 
+function progressGauge(have, need){
+  let dots = '';
+  for(let i = 0; i < need; i++){
+    dots += `<span class="dot ${i < have ? 'filled' : ''}"></span>`;
+  }
+  return `<div class="progressGauge">${dots}</div>`;
+}
+
 function topTwo(byKey, keys){
   const sorted = keys
     .map(k => ({ key: k, score: byKey[k] ? byKey[k].score : 0 }))
@@ -336,8 +346,8 @@ async function render(){
 
   const blobLockOverlay = document.getElementById('blobLockOverlay');
   if(!unlocked.surface){
-    const remain = Math.max(0, UNLOCK_THRESHOLDS.surface - countAnswered(surfaceKeys));
-    document.getElementById('blobLockText').textContent = `${remain}개 더 답하면 나만의 형태가 보여요`;
+    const have = countAnswered(surfaceKeys);
+    document.getElementById('blobProgressGauge').innerHTML = progressGauge(have, UNLOCK_THRESHOLDS.surface);
     blobLockOverlay.style.display = 'flex';
   } else {
     blobLockOverlay.style.display = 'none';
@@ -347,8 +357,8 @@ async function render(){
   function lockableCard(title, sub, innerHtml, isUnlocked, needCount, haveCount, extraClass){
     const cls = `card ${extraClass || ''} ${isUnlocked ? '' : 'locked'}`.trim();
     const overlay = isUnlocked ? '' : `<div class="lockOverlay">
-        <div class="lockIcon">🔒</div>
-        <div class="lockText">${Math.max(0, needCount - haveCount)}개 더 답하면 열려요</div>
+        ${progressGauge(haveCount, needCount)}
+        <div class="lockText">조금만 더 답하면 볼 수 있어요</div>
       </div>`;
     return `<div class="${cls}">
       <div class="lockedInner">
