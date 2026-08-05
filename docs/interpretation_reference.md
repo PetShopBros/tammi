@@ -99,6 +99,21 @@
 
 ---
 
+## 복합 지표 (여러 트레잇 조합)
+
+### 타미 MBTI 유형 유추 (calculate_mbti.py)
+- **절대 "MBTI 결과"라고 표기하지 않는다.** 항상 "타미 MBTI 유형 유추" 또는 동급의 구분 문구를 사용할 것.
+- 실제 MBTI(Myers-Briggs Type Indicator)는 Katharine Briggs와 Isabel Briggs Myers가 만든 저작권 있는 검사로, 자체 문항지와 이분법적(둘 중 하나) 채점 방식을 갖는다. tammi는 이 검사를 사용하거나 재현하지 않으며, Jung의 심리유형론에서 유래한 4가지 선호축 개념만 차용해 이미 tammi가 갖고 있는 연속형(스펙트럼) 트레잇 점수로 자체 추정한다.
+- 4축 매핑:
+  - **E/I**: bigfive_extraversion 점수 그대로 사용 (score≥50 → E, <50 → I)
+  - **N/S**: info_style 점수 그대로 사용 (score≥50 → N, <50 → S)
+  - **T/F**: judgment_basis 점수 그대로 사용 (score≥50 → T, <50 → F)
+  - **J/P**: bigfive_conscientiousness(60%) + decision_style 역방향(40%) 가중 평균 — `100 - decision_style_score`로 뒤집어서 사용 (decision_style은 pole_left가 즉흥/quick 방향이라 conscientiousness의 planner=J 방향과 반대이기 때문)
+- confidence: 4축 각각 원본 트레잇의 confidence를 그대로 노출. 종합 confidence는 4축 중 최솟값. 특정 축 confidence가 낮으면 "데이터 적음, 참고용" 플래그 표시.
+- 한계 명시: Big Five와 MBTI 축 간 상관관계는 축마다 강도가 다르며(E/I, J/P는 강함 / N/S는 중간 / T/F는 약함), 이 방식은 원본 MBTI 검사와 결과가 다를 수 있다. 검증된 심리측정 결과가 아니라 tammi 자체 트레잇 데이터 기반의 참고용 추정치임을 사용자에게 명시할 것.
+
+---
+
 ## 라이프스타일
 
 ### 시간관 (time_perspective)

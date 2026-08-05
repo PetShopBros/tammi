@@ -150,6 +150,7 @@ const UNLOCK_THRESHOLDS = {
   middle: 2,    // RIASEC/decision/risk/conflict 5개 중 2개
   deep: 2,      // locus/love/time/spending/learning 5개 중 2개
   taste: 1,     // taste 3개 중 1개
+  mbti: 3,      // MBTI 계산에 쓰는 5개 트레잇 중 3개
 };
 
 async function loadTraitData(){
@@ -252,6 +253,57 @@ function progressGauge(have, need){
     dots += `<span class="dot ${i < have ? 'filled' : ''}"></span>`;
   }
   return `<div class="progressGauge">${dots}</div>`;
+}
+
+// 타미 MBTI 유형 유추: 실제 MBTI 검사가 아니라 tammi 트레잇 점수를 조합한
+// 자체 추정치. calculate_mbti.py와 동일한 계산 방식 (docs/interpretation_reference.md 참고)
+const CONSCIENTIOUSNESS_WEIGHT = 0.6;
+const DECISION_STYLE_WEIGHT = 0.4;
+
+function computeMbti(byKey){
+  const ei = byKey.bigfive_extraversion;
+  const ns = byKey.info_style;
+  const tf = byKey.judgment_basis;
+  const consc = byKey.bigfive_conscientiousness;
+  const dec = byKey.decision_style;
+
+  // decision_style은 pole_left가 즉흥(quick=P방향)이라 conscientiousness(pole_left=planner=J)와
+  // 방향을 맞추기 위해 100에서 빼서 뒤집는다.
+  const jpScore = CONSCIENTIOUSNESS_WEIGHT * consc.score + DECISION_STYLE_WEIGHT * (100 - dec.score);
+  const jpConf = Math.min(consc.confidence, dec.confidence);
+
+  const axes = [
+    { axis: 'E/I', score: ei.score, confidence: ei.confidence, left: 'E', right: 'I' },
+    { axis: 'N/S', score: ns.score, confidence: ns.confidence, left: 'N', right: 'S' },
+    { axis: 'T/F', score: tf.score, confidence: tf.confidence, left: 'T', right: 'F' },
+    { axis: 'J/P', score: jpScore, confidence: jpConf, left: 'J', right: 'P' },
+  ];
+
+  let type = '';
+  axes.forEach(a => { type += a.score >= 50 ? a.left : a.right; });
+  const overallConfidence = Math.min(...axes.map(a => a.confidence));
+
+  return { type, overallConfidence, axes };
+}
+
+function mbtiCardInner(mbti){
+  let html = `<div style="display:flex; align-items:center; gap:10px; margin-bottom: 14px;">
+    <div style="font-family:'Space Grotesk',sans-serif; font-size: 32px; font-weight:700; color: var(--plum);">${mbti.type}</div>
+    <div style="font-size: 10px; color: var(--muted); background: var(--bg); padding: 3px 8px; border-radius: 8px;">타미 추정 · 참고용</div>
+  </div>`;
+  mbti.axes.forEach(a => {
+    const lowConf = a.confidence < 0.3;
+    const letter = a.score >= 50 ? a.left : a.right;
+    html += `<div class="barRow">
+      <div class="label">${a.axis} (${letter})</div>
+      <div class="track"><div class="fill" style="width:${Math.round(a.score)}%"></div></div>
+      <div class="val ${lowConf ? 'lowconf' : ''}">${lowConf ? '데이터 적음' : Math.round(a.confidence*100)+'%'}</div>
+    </div>`;
+  });
+  html += `<div style="font-size: 10px; color: var(--muted); margin-top: 8px; line-height:1.5;">
+    실제 MBTI 검사가 아니라, 타미가 이미 갖고 있는 성향 데이터를 조합해 추정한 참고용 결과예요.
+  </div>`;
+  return html;
 }
 
 function topTwo(byKey, keys){
@@ -413,6 +465,11 @@ async function render(){
   tasteInner += '</div>';
   html += lockableCard('취향 리포트', '심리 프레임워크 기반 아님, 추천용 취향 데이터', tasteInner,
     unlocked.taste, UNLOCK_THRESHOLDS.taste, countAnswered(tasteKeys), 'taste');
+
+  const mbtiKeys = ['bigfive_extraversion','info_style','judgment_basis','bigfive_conscientiousness','decision_style'];
+  const mbti = computeMbti(byKey);
+  html += lockableCard('타미 MBTI 유형 유추', '기존 성향 데이터로 추정한 참고용 결과', mbtiCardInner(mbti),
+    countAnswered(mbtiKeys) >= UNLOCK_THRESHOLDS.mbti, UNLOCK_THRESHOLDS.mbti, countAnswered(mbtiKeys));
 
   document.getElementById('content').innerHTML = html;
 }

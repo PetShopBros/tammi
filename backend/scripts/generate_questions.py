@@ -257,7 +257,7 @@ def load_existing_texts_from_db():
         return []
 
 
-def generate(primary_key, count, format_type="mixed", max_attempts=5):
+def generate(primary_key, count, format_type="mixed", max_attempts=10):
     traits, by_key = load_traits()
     if primary_key not in by_key:
         raise SystemExit(f"알 수 없는 trait key: {primary_key} (traits_seed.json 확인)")
@@ -278,8 +278,11 @@ def generate(primary_key, count, format_type="mixed", max_attempts=5):
     while len(accepted) < count and attempts < max_attempts:
         attempts += 1
         need = count - len(accepted)
-        print(f"[{attempts}/{max_attempts}] API 요청 중... (남은 목표: {need}개)", flush=True)
-        prompt = build_prompt(primary_trait, traits, existing_texts, need + 5, format_type)
+        # 한 번의 API 콜에서 너무 많은 문항을 요청하면 응답이 max_tokens를 넘어
+        # JSON이 중간에 잘리는 문제가 있어, 한 콜당 요청량을 최대 10개로 제한한다.
+        batch_size = min(need + 5, 10)
+        print(f"[{attempts}/{max_attempts}] API 요청 중... (이번 배치: {batch_size}개, 남은 목표: {need}개)", flush=True)
+        prompt = build_prompt(primary_trait, traits, existing_texts, batch_size, format_type)
         resp = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=8000,

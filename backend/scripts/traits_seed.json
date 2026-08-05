@@ -17,6 +17,8 @@
   {"key":"locus_of_control","family":"Cognition","type":"bipolar","name":"통제소재","pole_left":"internal","pole_right":"external","pole_left_label":"내적 통제","pole_right_label":"외적 통제"},
 
   {"key":"conflict_style","family":"Relationship","type":"bipolar","name":"갈등대응스타일","pole_left":"direct","pole_right":"avoidant","pole_left_label":"직면형","pole_right_label":"회피형"},
+  {"key":"judgment_basis","family":"Cognition","type":"bipolar","name":"판단기준_논리감정","pole_left":"logic","pole_right":"harmony","pole_left_label":"논리형","pole_right_label":"관계형"},
+  {"key":"info_style","family":"Cognition","type":"bipolar","name":"정보인식_직관감각","pole_left":"intuition","pole_right":"sensing","pole_left_label":"직관형","pole_right_label":"감각형"},
   {"key":"communication_tone","family":"Relationship","type":"bipolar","name":"커뮤니케이션톤","pole_left":"blunt","pole_right":"tactful","pole_left_label":"직설적","pole_right_label":"완곡한"},
   {"key":"love_language_words","family":"Relationship","type":"independent","name":"애정표현_인정하는말"},
   {"key":"love_language_time","family":"Relationship","type":"independent","name":"애정표현_함께하는시간"},
