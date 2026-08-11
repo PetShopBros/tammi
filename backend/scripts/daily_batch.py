@@ -1,14 +1,14 @@
 """
-daily_batch.py
+daily_batch.py (DeepSeek 버전)
 
 traits_seed.json에 있는 모든 특성을 순회하면서 각각 소량씩 문항을 생성하고,
-끝나면 한 번에 DB로 로드한다. GitHub Actions 같은 자동 스케줄러에서 이 파일
-하나만 실행하면 "다양한 카테고리에 걸쳐 골고루" 문항이 계속 쌓인다.
+끝나면 한 번에 DB로 로드한다. generate_questions.py의 generate()를 그대로
+재사용하므로 A(배치 축소)/B(재시도 한도)/C(상세 로그) 로직이 트레잇마다 그대로 적용된다.
+DeepSeek는 별도 배치 API가 없어서 트레잇마다 순차적으로 동기 호출한다
+(DeepSeek 단가 자체가 매우 저렴해서 배치 할인 없이도 문제없음).
 
-로컬에서 직접 테스트:
+로컬 테스트:
     python daily_batch.py --per-trait 3
-
-GitHub Actions에서는 workflow yaml이 이 스크립트를 그대로 호출한다.
 """
 
 import argparse

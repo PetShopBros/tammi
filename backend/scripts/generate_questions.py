@@ -30,11 +30,12 @@ import argparse
 import datetime
 import difflib
 import json
+import math
 import os
 import re
 from pathlib import Path
 
-import anthropic
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # backend/.env 파일을 자동으로 읽어서 환경변수로 등록한다.
@@ -256,8 +257,62 @@ def load_existing_texts_from_db():
         print(f"  (DB 기존 문항 조회 실패, 로컬 데이터만 사용: {e})", flush=True)
         return []
 
+def parse_candidates(raw):
+    """API 응답 텍스트를 JSON으로 파싱. 실패하면 (None, 예외) 반환."""
+    cleaned = raw.strip()
+    cleaned = re.sub(r"^```json|```$", "", cleaned, flags=re.MULTILINE).strip()
+    try:
+        return json.loads(cleaned), None
+    except json.JSONDecodeError as e:
+        return None, e
 
-def generate(primary_key, count, format_type="mixed", max_attempts=10):
+
+def filter_and_accept(candidates, primary_key, primary_trait, by_key, existing_texts, already_have, count, next_id):
+    """후보 문항들을 검증/중복체크해서 통과분만 골라낸다.
+    existing_texts는 그 자리에서 확장됨 (다음 호출의 중복체크에 바로 반영).
+    반환: (accepted 리스트, 통계 dict, 다음에 쓸 id)
+    """
+    accepted = []
+    stats = {"forbidden": 0, "duplicate": 0, "invalid": 0}
+    for c in candidates:
+        if already_have + len(accepted) >= count:
+            break
+        texts = flatten_texts(c)
+        if any(contains_forbidden(t) for t in texts):
+            stats["forbidden"] += 1
+            continue
+        if any(is_duplicate(t, existing_texts) for t in texts):
+            stats["duplicate"] += 1
+            continue
+        option_keys = {opt["key"] for opt in c.get("options", [])}
+        filtered_links = []
+        primary_ok = False
+        for link in c.get("links", []):
+            trait_key = link.get("trait_key")
+            if trait_key not in by_key:
+                continue
+            if link.get("option_key") not in option_keys:
+                continue
+            trait = by_key[trait_key]
+            if trait["type"] == "bipolar":
+                if link.get("pole") not in (trait.get("pole_left"), trait.get("pole_right")):
+                    continue
+            filtered_links.append(link)
+            if trait_key == primary_key:
+                primary_ok = True
+        if not primary_ok:
+            stats["invalid"] += 1
+            continue
+        c["links"] = filtered_links
+        c["id"] = next_id
+        next_id += 1
+        c["category_hint"] = primary_trait["name"]
+        c["created_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+        accepted.append(c)
+        existing_texts.extend(texts)
+    return accepted, stats, next_id
+
+def generate(primary_key, count, format_type="mixed", max_attempts=None):
     traits, by_key = load_traits()
     if primary_key not in by_key:
         raise SystemExit(f"알 수 없는 trait key: {primary_key} (traits_seed.json 확인)")
@@ -265,80 +320,81 @@ def generate(primary_key, count, format_type="mixed", max_attempts=10):
         raise SystemExit(f"알 수 없는 format: {format_type} (선택: {', '.join(FORMAT_GUIDES)}, mixed)")
     primary_trait = by_key[primary_key]
 
+    # [B] max_attempts를 count 크기에 비례해서 자동 계산.
+    # 명시적으로 넘기지 않으면, batch_size 상한(10)을 감안해 여유 있게 잡는다.
+    # 예: count=85 -> ceil(85/5)*2 = 34번까지 허용 (기존 고정값 10이면 중간에 조용히 종료됨)
+    if max_attempts is None:
+        max_attempts = max(10, math.ceil(count / 5) * 2)
+
     bank = load_json(BANK_PATH, [])
     existing_texts = []
     for q in bank:
         existing_texts.extend(flatten_texts(q))
     existing_texts.extend(load_existing_texts_from_db())
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = OpenAI(
+        api_key=os.environ["DEEPSEEK_API_KEY"],
+        base_url="https://api.deepseek.com",
+    )
 
     accepted = []
     attempts = 0
+    parse_fail_count = 0
+    forbidden_skip_count = 0
+    duplicate_skip_count = 0
+    invalid_skip_count = 0
+
+    # [A] 파싱 실패 시 다음 요청 크기를 줄여나가는 상한값 (최소 3까지)
+    batch_cap = 10
+
     while len(accepted) < count and attempts < max_attempts:
         attempts += 1
         need = count - len(accepted)
-        # 한 번의 API 콜에서 너무 많은 문항을 요청하면 응답이 max_tokens를 넘어
-        # JSON이 중간에 잘리는 문제가 있어, 한 콜당 요청량을 최대 10개로 제한한다.
-        batch_size = min(need + 5, 10)
+        batch_size = min(need + 5, batch_cap)
         print(f"[{attempts}/{max_attempts}] API 요청 중... (이번 배치: {batch_size}개, 남은 목표: {need}개)", flush=True)
         prompt = build_prompt(primary_trait, traits, existing_texts, batch_size, format_type)
-        resp = client.messages.create(
-            model="claude-sonnet-4-6",
+        resp = client.chat.completions.create(
+            model="deepseek-v4-flash",
             max_tokens=8000,
             messages=[{"role": "user", "content": prompt}],
+            extra_body={"thinking": {"type": "disabled"}},
         )
         print("  -> 응답 받음, 파싱 중...", flush=True)
-        raw = resp.content[0].text.strip()
-        raw = re.sub(r"^```json|```$", "", raw, flags=re.MULTILINE).strip()
-        try:
-            candidates = json.loads(raw)
-        except json.JSONDecodeError as e:
+        raw = resp.choices[0].message.content or ""
+        candidates, err = parse_candidates(raw)
+        if candidates is None:
+            parse_fail_count += 1
             debug_path = BASE_DIR / "last_failed_response.txt"
             debug_path.write_text(raw, encoding="utf-8")
-            print(f"  -> JSON 파싱 실패 ({e}). 원본을 {debug_path.name}에 저장함", flush=True)
+            # [A] 실패할 때마다 다음 배치 크기를 절반으로 줄임 (최소 3)
+            batch_cap = max(3, batch_cap // 2)
+            print(
+                f"  -> JSON 파싱 실패 ({err}). 원본을 {debug_path.name}에 저장함. "
+                f"다음 배치 크기를 {batch_cap}개로 축소함",
+                flush=True,
+            )
             continue
 
-        for c in candidates:
-            texts = flatten_texts(c)
-            if any(contains_forbidden(t) for t in texts):
-                continue  # 금지 키워드 감지 시 통째로 스킵
-            if any(is_duplicate(t, existing_texts) for t in texts):
-                continue
-            # trait_key / option_key / pole 유효성 검증
-            # (pole이 한글 라벨로 잘못 들어온 경우는 그 링크만 버리고,
-            #  주 특성 링크 자체가 깨진 경우엔 문항 전체를 버린다)
-            option_keys = {opt["key"] for opt in c.get("options", [])}
-            filtered_links = []
-            primary_ok = False
-            for link in c.get("links", []):
-                trait_key = link.get("trait_key")
-                if trait_key not in by_key:
-                    continue
-                if link.get("option_key") not in option_keys:
-                    continue
-                trait = by_key[trait_key]
-                if trait["type"] == "bipolar":
-                    if link.get("pole") not in (trait.get("pole_left"), trait.get("pole_right")):
-                        continue  # 한글 라벨 등 잘못된 pole 값 -> 이 링크만 버림
-                filtered_links.append(link)
-                if trait_key == primary_key:
-                    primary_ok = True
-            if not primary_ok:
-                continue  # 주 특성 링크가 없으면 문항 전체 스킵
-            c["links"] = filtered_links
-
-            c["id"] = len(bank) + len(accepted) + 1
-            c["category_hint"] = primary_trait["name"]
-            c["created_at"] = datetime.datetime.now(datetime.UTC).isoformat()
-            accepted.append(c)
-            existing_texts.extend(texts)
-            if len(accepted) >= count:
-                break
+        new_accepted, stats, _next_id = filter_and_accept(
+            candidates, primary_key, primary_trait, by_key, existing_texts,
+            len(accepted), count, len(bank) + len(accepted) + 1,
+        )
+        forbidden_skip_count += stats["forbidden"]
+        duplicate_skip_count += stats["duplicate"]
+        invalid_skip_count += stats["invalid"]
+        accepted.extend(new_accepted)
 
     bank.extend(accepted)
     save_bank(bank)
-    print(f"[{primary_trait['name']}] 신규 {len(accepted)}개 저장 (전체 {len(bank)}개)")
+
+    # [C] 종료 시 상세 로그 - 목표 미달성이면 왜 미달성인지 바로 보이게 함
+    status = "목표 달성" if len(accepted) >= count else f"목표 미달성 ({attempts}/{max_attempts}회 시도 소진)"
+    print(
+        f"[{primary_trait['name']}] 신규 {len(accepted)}/{count}개 저장 (전체 {len(bank)}개) - {status}\n"
+        f"  세부: API 콜 {attempts}회 (파싱실패 {parse_fail_count}회) / "
+        f"스킵: 금지어 {forbidden_skip_count}, 중복 {duplicate_skip_count}, 링크불량 {invalid_skip_count}",
+        flush=True,
+    )
     return accepted
 
 
