@@ -1,0 +1,362 @@
+.wrap {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--ink);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.title {
+  font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.counter {
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: var(--plum);
+  font-weight: 500;
+  margin: 14px 0 20px;
+  letter-spacing: 0.04em;
+}
+.counter b {
+  font-size: 15px;
+}
+
+/* Duel card */
+.duel {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(36, 28, 53, 0.25);
+}
+.opt {
+  padding: 38px 24px;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.opt:active {
+  transform: scale(0.97);
+}
+.optTop {
+  background: var(--plum);
+  color: #f4f0ff;
+  border-radius: 20px 20px 0 0;
+}
+.optBottom {
+  background: var(--mustard);
+  color: #2b1c05;
+  border-radius: 0 0 20px 20px;
+}
+.optLabel {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: 10px;
+}
+.optText {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.vsBadge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 46px;
+  height: 46px;
+  background: var(--coral);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(225, 86, 107, 0.5);
+  z-index: 5;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flyingTop .optTop, .flyingTop .optBottom {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  .flyingBottom .optTop, .flyingBottom .optBottom {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  .duel .opt {
+    transition: transform 0.22s ease, opacity 0.22s ease;
+  }
+  .enter .opt {
+    animation: popIn 0.25s ease;
+  }
+  @keyframes popIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+.skipRow {
+  text-align: center;
+  margin-top: 14px;
+}
+.skipRow button {
+  background: none;
+  border: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- 아래는 현재 화면에서 사용하지 않는 죽은 CSS입니다 ----
+   (프로필패널/친구비교 기능이 result 화면으로 이동하면서 남은 스타일.
+    추후 부활 예정이라 삭제하지 않고 보존합니다.) */
+
+.profileToggle {
+  display: block;
+  width: 100%;
+  margin-top: 26px;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--plum);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(36, 28, 53, 0.08);
+}
+.profilePanel {
+  display: none;
+  background: #fff;
+  border-radius: 14px;
+  margin-top: 10px;
+  padding: 20px 20px 6px;
+  box-shadow: 0 4px 14px rgba(36, 28, 53, 0.08);
+}
+.profilePanel.open {
+  display: block;
+}
+.profileEmpty {
+  font-size: 13px;
+  color: var(--muted);
+  padding-bottom: 16px;
+  line-height: 1.6;
+}
+.axis {
+  margin-bottom: 18px;
+}
+.axis .poles {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.axis .poles span:first-child {
+  color: var(--plum);
+}
+.axis .poles span:last-child {
+  color: var(--mustard);
+}
+.axis .bar {
+  height: 8px;
+  border-radius: 4px;
+  background: #efe9dd;
+  overflow: hidden;
+  display: flex;
+}
+.axis .bar .fillL {
+  background: var(--plum);
+  height: 100%;
+}
+.axis .bar .fillR {
+  background: var(--mustard);
+  height: 100%;
+}
+
+.badgeLine {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--coral);
+  padding: 4px 0 18px;
+}
+
+.compareToggle {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--coral);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(36, 28, 53, 0.08);
+}
+.comparePanel {
+  display: none;
+  background: #fff;
+  border-radius: 14px;
+  margin-top: 10px;
+  padding: 18px 20px 20px;
+  box-shadow: 0 4px 14px rgba(36, 28, 53, 0.08);
+}
+.comparePanel.open {
+  display: block;
+}
+.compareNote {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.compareSection {
+  margin-bottom: 20px;
+}
+.compareSection h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.codeRow {
+  display: flex;
+  gap: 8px;
+}
+.codeRow input {
+  flex: 1;
+  border: 1.5px solid #e7e2f2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.codeRow button {
+  background: var(--plum);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.myCodeBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+.myCodeBox span {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--plum);
+}
+.myCodeBox button {
+  background: none;
+  border: 1px solid var(--plum);
+  color: var(--plum);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.compareMsg {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.cmpAxis {
+  margin-bottom: 16px;
+}
+.cmpAxis .cmpPoles {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.cmpAxis .cmpPoles span:first-child {
+  color: var(--plum);
+}
+.cmpAxis .cmpPoles span:last-child {
+  color: var(--mustard);
+}
+.cmpBar {
+  height: 7px;
+  border-radius: 4px;
+  background: #efe9dd;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 3px;
+}
+.cmpBar .fL {
+  background: var(--plum);
+  height: 100%;
+}
+.cmpBar .fR {
+  background: var(--mustard);
+  height: 100%;
+}
+.cmpBar.friend .fL {
+  background: #a99bd4;
+}
+.cmpBar.friend .fR {
+  background: #f0c184;
+}
+.cmpWho {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.cmpResult {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--coral);
+  padding-top: 6px;
+}

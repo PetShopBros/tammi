@@ -6,3 +6,12 @@ backend/scripts/last_failed_response.txt
 *.pyc
 .vercel
 .env*
+
+# Next.js
+.next/
+node_modules/
+*.tsbuildinfo
+next-env.d.ts
+AGENTS.md
+CLAUDE.md
+node_modules

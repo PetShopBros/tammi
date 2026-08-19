@@ -1,0 +1,124 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px 28px 32px;
+  box-shadow: 0 20px 60px rgba(36, 28, 53, 0.12);
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 8px;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--plum);
+  letter-spacing: -0.01em;
+}
+
+.tagline {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ede9f5;
+}
+
+.btnList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: none;
+  font-family: var(--font-noto-sans-kr), sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.12s ease;
+}
+.btn:active { opacity: 0.8; }
+
+.btnKakao {
+  background: #FEE500;
+  color: #191919;
+}
+.btnNaver {
+  background: #03C75A;
+  color: #fff;
+}
+.btnGoogle {
+  background: #fff;
+  color: #3c4043;
+  border: 1.5px solid #e0dce8;
+}
+.btnApple {
+  background: #000;
+  color: #fff;
+}
+
+.btnIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.skip {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.skip a {
+  color: var(--plum);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.errorMsg {
+  text-align: center;
+  font-size: 12px;
+  color: var(--coral);
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #fff0f2;
+  border-radius: 8px;
+}

@@ -1,0 +1,217 @@
+.wrap {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.title {
+  font-family: var(--font-space-grotesk), var(--font-noto-sans-kr), sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Blob */
+.blobWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 28px;
+}
+.layerLocked {
+  filter: blur(7px);
+  opacity: 0.25;
+}
+.blobLockOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.blobLockText {
+  font-size: 12px;
+  color: var(--plum);
+  font-weight: 500;
+  background: var(--card, #fff);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(36, 28, 53, 0.06);
+}
+.cardTaste {
+  background: #f4efe3;
+}
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.cardSub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.cardLocked {
+  position: relative;
+  overflow: hidden;
+}
+.lockedInner {
+  /* blur applied via inline style when locked */
+}
+.lockedInnerBlurred {
+  filter: blur(5px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lockOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.lockText {
+  font-size: 12px;
+  color: var(--plum);
+  font-weight: 500;
+  background: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* Bar rows */
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.barLabel {
+  width: 92px;
+  font-size: 12px;
+  color: var(--plum);
+  flex-shrink: 0;
+}
+.barTrack {
+  flex: 1;
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--coral), var(--mustard));
+}
+.barVal {
+  width: 56px;
+  font-size: 11px;
+  text-align: right;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.barValLowConf {
+  color: var(--coral);
+}
+
+/* Delta row */
+.deltaRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: -4px 0 12px 102px;
+  font-size: 10px;
+}
+.deltaLabel { color: var(--muted); }
+.deltaUp { color: #2e9e5b; font-weight: 600; }
+.deltaDown { color: var(--coral); font-weight: 600; }
+.deltaFlat { color: var(--muted); }
+.deltaNone { color: var(--muted); opacity: 0.5; }
+
+/* Gauge */
+.gaugeLabel {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.gaugeTrack {
+  position: relative;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  margin-bottom: 12px;
+}
+.gaugeDot {
+  position: absolute;
+  top: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--plum);
+  transform: translateX(-50%);
+}
+
+/* Taste tags */
+.tasteTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tasteTag {
+  background: #fff;
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* Progress gauge dots */
+.progressGauge {
+  display: flex;
+  gap: 5px;
+}
+.progressDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1.5px solid var(--muted);
+}
+.progressDotFilled {
+  background: linear-gradient(135deg, var(--coral), var(--mustard));
+  border-color: transparent;
+}
+
+/* Loading / empty */
+.loading,
+.empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 40px 0;
+}

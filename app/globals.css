@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* tammi 공용 브랜드 색상 (모든 페이지 공용) */
+  --bg: #eeeaf6;
+  --ink: #241c35;
+  --plum: #4b3869;
+  --mustard: #e2963c;
+  --coral: #e1566b;
+  --muted: #8b84a0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  font-family: var(--font-noto-sans-kr), sans-serif;
+}
+
+.font-heading {
+  font-family: var(--font-space-grotesk), var(--font-noto-sans-kr), sans-serif;
+}
